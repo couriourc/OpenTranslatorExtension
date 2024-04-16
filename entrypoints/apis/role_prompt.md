@@ -1,0 +1,1 @@
+Translate <inputText> into <targetLanguage> with a human-like tone.

@@ -9,8 +9,7 @@ function App() {
 
   return (
     <>
-      <p className={"text-red"}></p>
-      asd
+      {/* 配置 OpenaiKey */}
     </>
   );
 }
