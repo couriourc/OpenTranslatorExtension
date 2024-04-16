@@ -15,9 +15,12 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@emotion/css": "^11.11.2",
+    "@types/jquery": "^3.5.29",
     "@unocss/preset-uno": "^0.59.0",
     "@unocss/preset-wind": "^0.59.0",
     "jotai": "^2.8.0",
+    "jquery": "^3.7.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "unocss": "^0.59.0"
