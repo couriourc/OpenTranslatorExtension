@@ -1,5 +1,5 @@
 import TranslatePrompt from "./role_prompt.md?raw"
-async function callOpenAI(inputText: string, targetLanguage: string, apiKey: string) {
+export async function callOpenAI(inputText: string, targetLanguage: string, apiKey: string) {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {

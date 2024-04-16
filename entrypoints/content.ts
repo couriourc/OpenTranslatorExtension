@@ -13,7 +13,7 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       if (request.action === "getSelectedText") {
         const selectedText = getSelectedText();
-        console.log(await callOpenAI(selectedText))
+        console.log(await callOpenAI(selectedText, selectedText, "asd"))
         /* @ts-ignore */
         sendResponse({ text: selectedText });
       }
