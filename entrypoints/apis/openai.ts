@@ -1,4 +1,12 @@
-import TranslatePrompt from "./role_prompt.md?raw"
+import TranslateRolePrompt from "./role/role_prompt.md?raw"
+import TranslateSysPrompt from "./sys/translator.md?raw"
+
+const sys_map = {
+    'translator': TranslateSysPrompt,
+}
+const role_map = {
+    'translator': TranslateRolePrompt,
+}
 export async function callOpenAI(inputText: string, targetLanguage: string, apiKey: string) {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
@@ -9,10 +17,10 @@ export async function callOpenAI(inputText: string, targetLanguage: string, apiK
         body: JSON.stringify({
             model: "gpt-3.5-turbo",
             messages: [
-                { role: "system", content: "You are an excellent translator." },
+                { role: "system", content: sys_map['translator'] },
                 {
                     role: "user",
-                    content: TranslatePrompt
+                    content: role_map['translator']
                         .replace('<inputText>', inputText)
                         .replace('<targetLanguage>', targetLanguage)
                 },

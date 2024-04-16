@@ -1,0 +1,6 @@
+
+export default defineUnlistedScript({
+    main() {
+
+    }
+})

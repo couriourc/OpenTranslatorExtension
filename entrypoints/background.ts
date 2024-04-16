@@ -4,7 +4,7 @@ import { makeOpenTranslatorMessage } from "./requestor";
 
 
 export default defineBackground(() => {
-  // Setup context 
+  // Setup context
   browser.contextMenus?.create({
     id: browser.runtime.id,
     type: 'normal',
@@ -18,11 +18,13 @@ export default defineBackground(() => {
     tab.id &&
       browser.tabs.sendMessage(tab.id, makeOpenTranslatorMessage(info))
   })
+//
 
   browser.runtime.onInstalled.addListener(({ reason }) => {
     if (reason === "install") {
       browser.storage.local.set({ installData: Date.now() })
     }
   })
+
 
 });

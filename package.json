@@ -21,6 +21,7 @@
     "@unocss/preset-wind": "^0.59.0",
     "jotai": "^2.8.0",
     "jquery": "^3.7.1",
+    "less": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "unocss": "^0.59.0"

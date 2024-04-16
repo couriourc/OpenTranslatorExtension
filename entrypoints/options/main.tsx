@@ -4,7 +4,7 @@ import "uno.css";
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.tsx';
-import '@/assets/styles/style.css';
+import '@/assets/styles/style.less';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

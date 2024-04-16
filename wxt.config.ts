@@ -12,7 +12,7 @@ export default defineConfig({
   vite: () => ({
     plugins: [
       react(),
-      Unocss(),
+      Unocss({}),
     ],
   }),
 
