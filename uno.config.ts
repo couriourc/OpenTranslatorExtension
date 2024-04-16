@@ -5,5 +5,6 @@ export default defineConfig({
     presets: [
         presetUno(),
         presetWind(),
+
     ]
 })
