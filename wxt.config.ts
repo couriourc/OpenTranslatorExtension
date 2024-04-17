@@ -2,6 +2,8 @@ import {defineConfig} from 'wxt';
 import react from '@vitejs/plugin-react';
 import Unocss from "unocss/vite";
 import tailwindcss from  "tailwindcss"
+// vite.config.js
+import VitePluginHtmlEnv from 'vite-plugin-html-env'
 // See https://wxt.dev/api/config.html
 export default defineConfig({
     dev: {

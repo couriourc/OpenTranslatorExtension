@@ -17,6 +17,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "@nextui-org/button": "^2.0.28",
+    "@nextui-org/card": "^2.0.25",
     "@nextui-org/divider": "^2.0.26",
     "@nextui-org/dropdown": "^2.1.18",
     "@nextui-org/input": "^2.1.18",
@@ -45,6 +46,8 @@
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.3.3",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-html-env": "^1.2.8",
     "wxt": "^0.17.0"
   }
 }
