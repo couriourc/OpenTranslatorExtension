@@ -16,7 +16,7 @@ import {
     CardFooter, DropdownItem, DropdownMenu, Dropdown, DropdownTrigger
 } from "@nextui-org/react";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
-import {LogoWithName} from "@/shared/Logo.tsx";
+import {LogoWithName} from "@/shared/components/Logo.tsx";
 import {zIndex} from "@/shared/constants";
 
 function getSelectedText(): string {
