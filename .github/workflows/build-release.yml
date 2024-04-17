@@ -2,6 +2,11 @@ name: Release
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - master
 
 jobs:
   submit:
@@ -26,10 +31,12 @@ jobs:
           pnpm zip
           pnpm zip:firefox
 
-      - name: Create Release
-        id: create_release
-        uses: ncipollo/release-action@v1
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
         with:
-          artifacts: ".output/*.zip"
-          tag: "release"
-    
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: .output/*.zip # the folder which has all the files that you want to release
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+

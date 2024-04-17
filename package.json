@@ -12,7 +12,17 @@
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
+    "publish": "standard-version -r minor",
+    "pre:publish": "standard-version  --prerelease alpha",
+    "stable:publish": "standard-version  --tag-prefix 'stable-'"
+
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "npx commitlint -E HUSKY_GIT_PARAMS"
+    }
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
@@ -42,9 +52,16 @@
     "unocss": "^0.59.0"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.2.2",
+    "@commitlint/config-conventional": "^19.2.2",
     "@types/react": "^18.2.46",
     "@types/react-dom": "^18.2.18",
     "@vitejs/plugin-react": "^4.2.1",
+    "commitizen": "^4.3.0",
+    "conventional-changelog": "^5.1.0",
+    "conventional-changelog-cli": "^4.1.0",
+    "husky": "^9.0.11",
+    "standard-version": "^9.5.0",
     "typescript": "^5.3.3",
     "vite-plugin-html": "^3.2.2",
     "vite-plugin-html-env": "^1.2.8",
