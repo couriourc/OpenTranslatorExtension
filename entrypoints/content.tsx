@@ -28,7 +28,7 @@ import {IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
 import {GPTEngine} from "@/shared/designPattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
-import {getClientX, getClientY} from "@/shared/utils.ts";
+import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 
 function getSelectedText(): string {
@@ -243,7 +243,7 @@ export default defineContentScript({
                 let mousedownTarget: EventTarget;
                 $ui.hide();
 
-                const mouseUpHandler = async (event) => {
+                const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
 
                     if (
