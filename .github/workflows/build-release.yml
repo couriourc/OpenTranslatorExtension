@@ -5,8 +5,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - master
 
 jobs:
   submit:
@@ -35,7 +33,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: .output/*.zip # the folder which has all the files that you want to release
+          file: .output/* # the folder which has all the files that you want to release
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
