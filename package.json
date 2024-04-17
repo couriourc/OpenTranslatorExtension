@@ -17,7 +17,6 @@
     "publish": "standard-version -r minor",
     "pre:publish": "standard-version  --prerelease alpha",
     "stable:publish": "standard-version  --tag-prefix 'stable-'"
-
   },
   "husky": {
     "hooks": {
@@ -26,6 +25,8 @@
   },
   "dependencies": {
     "@emotion/css": "^11.11.2",
+    "@nextui-org/avatar": "^2.0.25",
+    "@nextui-org/badge": "^2.0.25",
     "@nextui-org/button": "^2.0.28",
     "@nextui-org/card": "^2.0.25",
     "@nextui-org/divider": "^2.0.26",
@@ -40,12 +41,15 @@
     "@unocss/preset-uno": "^0.59.0",
     "@unocss/preset-wind": "^0.59.0",
     "autoprefixer": "^10.4.19",
+    "eventsource-parser": "^1.1.2",
     "framer-motion": "^11.1.1",
     "jotai": "^2.8.0",
     "jquery": "^3.7.1",
     "less": "^4.2.0",
     "postcss": "^8.4.38",
     "react": "^18.2.0",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.2.0",
     "react-icons": "^5.1.0",
     "tailwindcss": "^3.4.3",
@@ -63,6 +67,7 @@
     "husky": "^9.0.11",
     "standard-version": "^9.5.0",
     "typescript": "^5.3.3",
+    "unfetch": "^5.0.0",
     "vite-plugin-html": "^3.2.2",
     "vite-plugin-html-env": "^1.2.8",
     "wxt": "^0.17.0"

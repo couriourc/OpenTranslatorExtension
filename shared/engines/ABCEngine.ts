@@ -7,7 +7,9 @@ export abstract class ABCGPTEngine {
     }
 
     // 列出当前方案支持的模型
-    abstract listModels(apiKey: string | undefined): Promise<IModel[]>
+    abstract listModels(apiKey: string | undefined): Promise<IModel[]>;
 
-    abstract sendMessage(req: IMessageRequest): Promise<void>
+    abstract sendMessage(req: IMessageRequest): Promise<void>;
+
+
 }
