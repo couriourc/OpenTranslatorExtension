@@ -1,5 +1,5 @@
 import {browser} from "wxt/browser";
-import {makeOpenTranslatorMessage} from "./requestor";
+import {makeOpenTranslatorMessage} from "@/shared/requestor";
 
 
 export default defineBackground(() => {
@@ -12,7 +12,7 @@ export default defineBackground(() => {
     }, () => {
         browser.runtime.lastError;
     });
-    
+
     browser.contextMenus?.onClicked.addListener(async function (info) {
         const [tab] = await browser.tabs.query({active: true, lastFocusedWindow: true});
         tab.id &&

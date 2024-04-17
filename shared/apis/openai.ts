@@ -39,9 +39,3 @@ export async function callOpenAI(inputText: string, targetLanguage: string, apiK
 
     return data;
 }
-
-export default defineUnlistedScript({
-    main() {
-
-    }
-})

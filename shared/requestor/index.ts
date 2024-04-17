@@ -1,5 +1,5 @@
 import {Menus} from "wxt/browser";
-import {ERequestorEnum} from "@/entrypoints/requestor/interfaces.ts";
+import {ERequestorEnum} from "./interfaces.ts";
 
 const makeMessage = (type: ERequestorEnum, args: Record<string, any>) => ({
     type: type,
@@ -10,8 +10,3 @@ export const makeOpenTranslatorMessage = (info: Menus.OnClickData) => makeMessag
 });
 
 
-export default defineUnlistedScript({
-    main() {
-
-    }
-});

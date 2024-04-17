@@ -9,18 +9,15 @@ import {
     Button,
     Divider,
     NextUIProvider,
-    Select,
-    SelectItem,
     Textarea,
     Card,
     CardHeader,
     CardBody,
     CardFooter, DropdownItem, DropdownMenu, Dropdown, DropdownTrigger
 } from "@nextui-org/react";
-import {CiRepeat} from "react-icons/ci";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
-import {Logo, LogoWithName} from "@/shared/Logo.tsx";
-import {CopyDocumentBulk} from "@nextui-org/shared-icons";
+import {LogoWithName} from "@/shared/Logo.tsx";
+import {zIndex} from "@/shared/constants";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -46,7 +43,7 @@ function ContentApp() {
                 width: 'auto',
                 minWidth: '600px',
                 minHeight: '200px',
-                zIndex: 2147483,
+                zIndex: zIndex,
                 backdropFilter: 'blur(6px)',
                 borderRadius: '6px',
                 boxShadow: "0 0 4px 0 rgba(0,0,0,.3)",
@@ -70,7 +67,7 @@ function ContentApp() {
                             variant={"light"}
                             className="capitalize"
                         >
-                            当前语言
+                            切换语言
                         </Button>
                     </DropdownTrigger>
                     <DropdownMenu
@@ -102,7 +99,7 @@ function ContentApp() {
             <CardFooter className={"flex justify-end"}>
                 <div className="flex gap-1">
                     <IoMdCopy title={"Copy Me"}></IoMdCopy>
-                    <IoIosHeartEmpty title={"Favirote Me"}></IoIosHeartEmpty>
+                    <IoIosHeartEmpty title={"Collect Me"}></IoIosHeartEmpty>
                 </div>
             </CardFooter>
         </Card>
