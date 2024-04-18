@@ -6,4 +6,4 @@ export const popupCardMaxWidth = 660
 export const documentPadding = 10
 export const popupCardOffset = 7
 
-export default  defineUnlistedScript({main(){}})
+export const portName = "openai-translator"

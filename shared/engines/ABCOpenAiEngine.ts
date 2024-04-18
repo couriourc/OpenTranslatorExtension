@@ -2,6 +2,8 @@
 import {IMessageRequest, IModel} from './interfaces';
 import {ABCGPTEngine} from "./ABCEngine.ts";
 import {fetchSSE} from "@/shared/utils.ts";
+import {browser} from "wxt/browser";
+import {portName} from "@/shared/constants";
 
 export abstract class AbstractOpenAI extends ABCGPTEngine {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -95,9 +97,9 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
         await fetchSSE(url, {
             method: 'POST',
             headers,
+            signal: req.signal,
             body: JSON.stringify(body),
             onMessage: async (msg) => {
-                console.log(msg)
 
                 if (finished) return;
                 let resp;
@@ -148,7 +150,7 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
             },
             onError: (err) => {
 
-                console.log(err)
+                console.log(err);
                 if (err instanceof Error) {
                     req.onError(err.message);
                     return;
@@ -183,5 +185,35 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
                 req.onError('Unknown error');
             },
         });
+    }
+
+    uuid: number = 0;
+
+    port?: ReturnType<typeof browser.runtime.connect>;
+
+
+    use_bypass() {
+        this.port = browser.runtime.connect({
+            name: portName,
+        });
+        this.port.onMessage.addListener((msg) => {
+            console.log(msg);
+            this.#listener.forEach(fn => fn(msg));
+        });
+        return this;
+    }
+
+    send_pass() {
+        this.port?.postMessage({
+            message: "openai_info",
+        });
+        return this;
+    }
+
+    #listener = new Set<Function>();
+
+    on_message(fn: Function) {
+        this.#listener.add(fn);
+        return this;
     }
 }

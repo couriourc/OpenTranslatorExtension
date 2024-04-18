@@ -7,7 +7,7 @@ export class Singleton<T> {
 
     set(newInstance: T): Singleton<T> {
         if (this.#instance) {
-            this.#instance = newInstance;
+//            this.#instance = newInstance;
             return this;
         }
         this.#instance = newInstance;

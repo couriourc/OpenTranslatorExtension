@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
@@ -16,8 +16,7 @@ import {
     DropdownItem,
     DropdownMenu,
     DropdownTrigger,
-    NextUIProvider,
-    Textarea
+    NextUIProvider
 } from "@nextui-org/react";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
@@ -27,11 +26,11 @@ import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
 import {GPTEngine, WrapperHelper} from "@/shared/designPattern/Singleton.ts";
-import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 import {ALL_DOM_EVENTS, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
 import Markdown from "react-markdown";
+import {OpenAIEngine} from "@/shared/engines/openai.ts";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -50,8 +49,16 @@ function EnginePanel({selection}: { selection: string }) {
     }
 
     const [message, syncMessage] = useState<string>("# GPT 翻译助手");
-
+    GPTEngine.then((gpt) => {
+        gpt.on_message((msg: any) => {
+            syncMessage((m) => m + msg.content);
+        });
+    });
     const ref = useRef<HTMLDivElement>(null);
+    const [is_loaded, setIsLoaded] = useState(false);
+    useEffect(() => {
+        setIsLoaded(true);
+    }, []);
     return <Card
         style={{
             minWidth: '280px',
@@ -77,28 +84,35 @@ function EnginePanel({selection}: { selection: string }) {
                 <LogoWithName></LogoWithName>
             </div>
 
-            <Dropdown
-                portalContainer={ref.current!}
-                className={"z-max"}
-            >
-                <DropdownTrigger>
-                    <Button
-                        variant={"light"}
-                        className="capitalize"
-                    >
-                        切换语言
-                    </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                    aria-label="Dropdown Variants"
-                    variant={"light"}
+            {
+                Assert(is_loaded, <Dropdown
+                    portalContainer={ref.current!}
+                    className={"z-max"}
                 >
-                    <DropdownItem key="English">English</DropdownItem>
-                    <DropdownItem key="中文" className="text-danger" color="danger">
-                        中文
-                    </DropdownItem>
-                </DropdownMenu>
-            </Dropdown>
+                    <DropdownTrigger>
+                        <Button
+                            variant={"light"}
+                            className="capitalize"
+                            onClick={() => {
+                                GPTEngine.then((gpt) => {
+                                    gpt.send_pass();
+                                });
+                            }}
+                        >
+                            切换语言
+                        </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu
+                        aria-label="Dropdown Variants"
+                        variant={"light"}
+                    >
+                        <DropdownItem key="English">English</DropdownItem>
+                        <DropdownItem key="中文" className="text-danger" color="danger">
+                            中文
+                        </DropdownItem>
+                    </DropdownMenu>
+                </Dropdown>)
+            }
 
         </CardHeader>
         <CardBody
@@ -186,17 +200,12 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     /*@REMEMBER_ME 这里配置使用的引擎*/
     useEffect(() => {
         console.log("this");
-        if (GPTEngine._is_loaded()) return;
-        const openai = new OpenAIEngine();
-        openai.openApiKey = panel.openAiKey as string;
-        GPTEngine.set(openai);
     }, []);
     const [panel_position, setPanel_position] = useState<DOMRect>();
     const [selection, set_selection] = useState<string>("");
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const listen = (e: any) => {
-            console.log(e);
             const postion = (e)?.getBoundingClientRect();
             $(ref.current as HTMLElement).css({
                 position: "fixed",
@@ -207,8 +216,10 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
                 left: postion?.left + "px",
             });
         };
+
         return wrap_jquery_event("show-popup", listen).unlisten;
     });
+
     return <div
         ref={r => {
             //@ts-ignore
@@ -348,6 +359,8 @@ export default defineContentScript({
             append: "first",
         });
 
+        /*@REMEMBER ME*/
+        GPTEngine.set(new OpenAIEngine().use_bypass());
         app_container.mount();
     },
 
