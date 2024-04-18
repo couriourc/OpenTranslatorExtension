@@ -23,6 +23,7 @@ export class Singleton<T> {
         this.#cached.forEach((fn) => {
             fn(this.#instance!);
         });
+        this.#cached.length = 0;
     }
 
     _is_loaded() {
@@ -42,5 +43,6 @@ export class Singleton<T> {
 export const GPTEngine = new Singleton<AbstractOpenAI>();
 
 export const WrapperHelper = new Singleton<{
-    $ui:JQuery,
+    $ui: JQuery,
+    dom: HTMLElement
 }>();

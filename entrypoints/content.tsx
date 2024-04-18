@@ -30,7 +30,8 @@ import {GPTEngine, WrapperHelper} from "@/shared/designPattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
-import {role_map, sys_map} from "@/shared/apis/openai.ts";
+import {ALL_DOM_EVENTS, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
+import Markdown from "react-markdown";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -42,16 +43,16 @@ let $ui: JQuery;
 function EnginePanel({selection}: { selection: string }) {
 
     const CardMotion = motion(Card);
-    const ref = useRef<HTMLDivElement>();
     const controls = useDragControls();
 
     function startDrag(event: React.PointerEvent<HTMLDivElement>) {
         controls.start(event);
     }
 
-    return <CardMotion
-        exit={{opacity: 0}}
-        ref={(r) => ref.current = (r as unknown as HTMLDivElement)!}
+    const [message, syncMessage] = useState<string>("# GPT 翻译助手");
+
+    const ref = useRef<HTMLDivElement>(null);
+    return <Card
         style={{
             minWidth: '280px',
             cursor: 'pointer',
@@ -62,8 +63,10 @@ function EnginePanel({selection}: { selection: string }) {
             boxSizing: 'border-box',
             overflow: "visible"
         }}
+        ref={element => {
+            ref.current = element!;
+        }}
         isFooterBlurred
-        id={"card-main"}
     >
         <CardHeader
             className={"justify-between py-0! mt-6px! box-border shrink-0"}
@@ -75,7 +78,7 @@ function EnginePanel({selection}: { selection: string }) {
             </div>
 
             <Dropdown
-                portalContainer={ref.current}
+                portalContainer={ref.current!}
                 className={"z-max"}
             >
                 <DropdownTrigger>
@@ -104,11 +107,9 @@ function EnginePanel({selection}: { selection: string }) {
             <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
                 <Divider></Divider>
-                <Textarea
-                    label="翻译结果"
-                    placeholder="Enter your description"
-                    className="w-full select-none"
-                />
+                <CardBody>
+                    <Markdown>{message}</Markdown>
+                </CardBody>
             </form>
         </CardBody>
         <CardFooter className={"flex justify-end"}>
@@ -117,7 +118,7 @@ function EnginePanel({selection}: { selection: string }) {
                 <IoIosHeartEmpty title={"Collect Me"}></IoIosHeartEmpty>
             </div>
         </CardFooter>
-    </CardMotion>;
+    </Card>;
 }
 
 function Assert(bool: boolean, Component: React.ReactNode) {
@@ -179,7 +180,6 @@ function PanelHeader() {
     </div>;
 }
 
-let panel_position: DOMRect = new DOMRect();
 
 function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     const [panel, setPanel] = usePanelStore();
@@ -196,20 +196,18 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const listen = (e: any) => {
-            const postion = (e?.detail)?.getBoundingClientRect();
+            console.log(e);
+            const postion = (e)?.getBoundingClientRect();
             $(ref.current as HTMLElement).css({
                 position: "fixed",
                 zIndex: zIndex,
                 minWidth: '280px',
-                minHeight: '500px',
+                width: '280px',
                 top: postion?.top + "px",
                 left: postion?.left + "px",
             });
         };
-        wrapper.addEventListener("show-popup", listen);
-        return () => {
-            wrapper.removeEventListener("show-popup", listen);
-        };
+        return wrap_jquery_event("show-popup", listen).unlisten;
     });
     return <div
         ref={r => {
@@ -224,6 +222,49 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     </div>;
 }
 
+function getPathTo(element: HTMLElement): string {
+    if (element.id !== '')
+        return 'id("' + element.id + '")';
+    if (element === document.body)
+        return element.tagName as string;
+    if (!element) return '';
+
+    let ix = 0;
+    let siblings = (element.parentNode as HTMLElement).children ?? [];
+    for (let i = 0; i < siblings.length; i++) {
+        let sibling = siblings[i];
+        if (sibling === element)
+            return getPathTo(element.parentNode as HTMLElement) + '/' + element.tagName + '[' + (ix + 1) + ']';
+        if (sibling.nodeType === 1 && sibling.tagName === element.tagName)
+            ix++;
+    }
+    return '';
+}
+
+function getElementByXpath(path: string, parent = document) {
+    return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+}
+
+function makeShowPopupEvent<T extends any>(params: CustomEventInit<T>) {
+    return new CustomEvent("show-popup", params);
+}
+
+function receiveHidePopupEvent<T extends any>(obj: {
+    listen: Function,
+    unlisten: Function
+}) {
+    obj.unlisten = () => {
+    };
+    WrapperHelper.then(({$ui}) => {
+        console.log(ALL_DOM_EVENTS["hide-popup"]);
+        $ui.on("hide-popup", () => {
+            obj.listen();
+        });
+        obj.unlisten = () => $ui.off("hide-popup");
+    });
+}
+
+let is_showed_popup = false;
 export default defineContentScript({
     matches: ['<all_urls>'],
     runAt: "document_end",
@@ -250,17 +291,21 @@ export default defineContentScript({
                                 const elem = event.target;
                                 text = elem.value.substring(elem.selectionStart ?? 0, elem.selectionEnd ?? 0).trim();
                             }
+                            console.log(getElementByXpath(getPathTo(event.target as HTMLElement)));
+                            if (is_showed_popup && !!getElementByXpath(getPathTo(event.target as HTMLElement))) {
+                                trigger_wrapper_jquery_event("hide-popup");
+                                $ui.hide();
+                                is_showed_popup = false;
+                            }
                         } else {
+                            is_showed_popup = true;
                             const x = getClientX(event);
                             const y = getClientY(event);
-                            let panel_position = new DOMRect(x, y, popupCardOffset, popupCardOffset);
                             $ui.show();
-                            wrapper.dispatchEvent(new CustomEvent("show-popup", {
-                                detail: {
-                                    getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
-                                    selection: text,
-                                }
-                            }));
+                            trigger_wrapper_jquery_event("show-popup", {
+                                getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
+                                selection: text,
+                            });
                         }
                     });
 
@@ -268,16 +313,22 @@ export default defineContentScript({
 
                 document.addEventListener('mouseup', mouseUpHandler);
                 document.addEventListener('touchend', mouseUpHandler);
-                wrapper.addEventListener("hide-popup", () => {
-                    WrapperHelper
-                        .then(({$ui}) => {
-                            $ui.hide();
-                        });
+
+
+                wrapper.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                 });
+
+
+                wrap_jquery_event("hide-popup", () => {
+                    $ui.hide();
+                });
+
 
                 // @REMEMBER_ME: 在此处设置了$ui
                 WrapperHelper
-                    .set({$ui})
+                    .set({$ui, dom: wrapper})
                     .then(({$ui}) => {
                         $ui.hide();
                     });
