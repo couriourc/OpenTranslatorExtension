@@ -17,7 +17,6 @@ export interface IMessageRequest {
     onError: (error: string) => void
     onFinished: (reason: string) => void
     onStatusCode?: (statusCode: number) => void
-    signal: AbortSignal
 }
 
 export interface IEngine {

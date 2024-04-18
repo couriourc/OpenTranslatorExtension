@@ -1,7 +1,8 @@
 import {atom, useAtom} from "jotai";
-
-import {atomWithStorage} from 'jotai/utils';
+import {storage} from 'wxt/storage';
+import {atomWithStorage, atomWithReset} from 'jotai/utils';
 import {GPTEngine} from "@/shared/designPattern/Singleton.ts";
+import {atomWithImmer, useImmerAtom} from "jotai-immer";
 
 export interface IPanelStore {
     isOpen: boolean;
@@ -9,28 +10,9 @@ export interface IPanelStore {
     openAiKey: string;
 }
 
-export const PanelStore = atomWithStorage<IPanelStore>("PanelStore", {
+export const PanelStore = atomWithImmer<IPanelStore>({
     isOpen: false,
     isClose: false,
-    openAiKey: "",
+    openAiKey: "sk-aLHe5YUN91bM9QYqgdlWD0r6WKkR4tqhG5kHwejAbX6BhDfb",
 });
-
-const SelectionAtom = atom<string>("");
-
-export interface TranslateStore {
-    selection: string;
-}
-
-export const TranslateStore = atom<TranslateStore>(async (get) => {
-    const [panel_store] = usePanelStore();
-    console.log();
-    const [selection] = useAtom(SelectionAtom);
-    const translated = atom<string>("");
-
-    GPTEngine.then(async (gpt) => {
-        await gpt.listModels(panel_store.openAiKey);
-    });
-    get(translated);
-});
-
-export const usePanelStore = () => useAtom(PanelStore);
+export const usePanelStore = () => useImmerAtom(PanelStore);

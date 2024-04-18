@@ -26,10 +26,11 @@ import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
-import {GPTEngine} from "@/shared/designPattern/Singleton.ts";
+import {GPTEngine, WrapperHelper} from "@/shared/designPattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
+import {role_map, sys_map} from "@/shared/apis/openai.ts";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -38,7 +39,7 @@ function getSelectedText(): string {
 
 let $ui: JQuery;
 
-function EnginePanel() {
+function EnginePanel({selection}: { selection: string }) {
 
     const CardMotion = motion(Card);
     const ref = useRef<HTMLDivElement>();
@@ -103,11 +104,10 @@ function EnginePanel() {
             <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
                 <Divider></Divider>
-
                 <Textarea
                     label="翻译结果"
                     placeholder="Enter your description"
-                    className="w-full"
+                    className="w-full select-none"
                 />
             </form>
         </CardBody>
@@ -130,102 +130,96 @@ function PanelHeader() {
     const [panel, setPanel] = usePanelStore();
 
     function showPanel() {
-        setPanel((panel) => {
-            return {
-                ...panel,
-                isOpen: true,
-            };
+        setPanel((state) => {
+            state.isOpen = true;
         });
     }
 
     function closePanel() {
-        setPanel((panel) => {
-            return {
-                ...panel,
-                isClose: true,
-
-            };
+        setPanel((state) => {
+            state.isOpen = false;
         });
     }
 
+    const MotionAvatar = motion(Avatar);
+
+    const [is_hovering, set_is_hovering] = useState<boolean>(false);
     return <div className={cx(
-        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em w-fit items-center ",
+        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em  w-fit items-center ",
     )}
                 onMouseEnter={(e) => {
+                    set_is_hovering(true);
                 }}
                 onMouseLeave={(e) => {
-
+                    set_is_hovering(false);
                 }}
     >
-        <Avatar icon={<Logo/>}
-                radius="md"
-                className={
-                    cx("w-6 h-6 text-tiny bg-transparent cursor-pointer")
-                }
-                onClick={showPanel}
-                showFallback
-        >
-        </Avatar>
         {
-            (() => {
-                const MotionAvatar = motion(Avatar);
-                return <MotionAvatar
+            <MotionAvatar icon={<Logo/>}
+                          radius="md"
+                          className={
+                              cx("w-6 h-6  bg-transparent cursor-pointer hover:bg-#ecf0f1 dark:hover:bg-#57606f")
+                          }
+                          onClick={showPanel}
+                          showFallback
+            />
+        }
+        {
+            Assert(
+                is_hovering,
+                <MotionAvatar
                     onClick={closePanel}
                     icon={<IoClose size={18}/>}
                     radius="md"
-                    className="close w-6 h-6 text-tiny bg-transparent cursor-pointer hover:text-red "
-                    showFallback>
-                </MotionAvatar>;
-            })()
+                    className="close w-6 h-6 text-tiny bg-transparent cursor-pointer hover:text-red animate-fade-in"
+                    showFallback
+                />
+            )
         }
     </div>;
 }
 
+let panel_position: DOMRect = new DOMRect();
 
 function ContentApp({wrapper}: { wrapper: HTMLElement }) {
-
     const [panel, setPanel] = usePanelStore();
-
-    const callback = useCallback(() => {
-        const openApiEngine = new OpenAIEngine();
-        console.log(panel.openAiKey);
-        openApiEngine.openApiKey = panel.openAiKey;
-        GPTEngine.set(openApiEngine);
-    }, [panel]);
-    callback();
+    /*@REMEMBER_ME 这里配置使用的引擎*/
     useEffect(() => {
-        if (panel.isClose) {
-            wrapper.dispatchEvent(new CustomEvent("hide-popup", {
-                detail: null,
-            }));
-        }
-    }, [panel]);
+        console.log("this");
+        if (GPTEngine._is_loaded()) return;
+        const openai = new OpenAIEngine();
+        openai.openApiKey = panel.openAiKey as string;
+        GPTEngine.set(openai);
+    }, []);
     const [panel_position, setPanel_position] = useState<DOMRect>();
+    const [selection, set_selection] = useState<string>("");
+    const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
-        const listen = (e) => {
-            setPanel_position(e.detail.getBoundingClientRect());
+        const listen = (e: any) => {
+            const postion = (e?.detail)?.getBoundingClientRect();
+            $(ref.current as HTMLElement).css({
+                position: "fixed",
+                zIndex: zIndex,
+                minWidth: '280px',
+                minHeight: '500px',
+                top: postion?.top + "px",
+                left: postion?.left + "px",
+            });
         };
         wrapper.addEventListener("show-popup", listen);
         return () => {
             wrapper.removeEventListener("show-popup", listen);
         };
     });
-    //@ts-ignore
     return <div
-        style={{
-            position: "fixed",
-            top: panel_position?.top + "px",
-            left: panel_position?.left + "px",
-            zIndex: zIndex,
-            minWidth: '280px',
-            minHeight: '500px',
-
+        ref={r => {
+            //@ts-ignore
+            ref.current = r!;
         }}
-
     >
-        <PanelHeader></PanelHeader>
+        <PanelHeader/>
         {
-            Assert(panel.isOpen as boolean, <EnginePanel></EnginePanel>)
+            Assert(panel.isOpen as boolean, <EnginePanel selection={selection}></EnginePanel>)
         }
     </div>;
 }
@@ -241,8 +235,6 @@ export default defineContentScript({
 
                 let lastMouseEvent;
                 let mousedownTarget: EventTarget;
-                $ui.hide();
-
                 const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
 
@@ -259,12 +251,14 @@ export default defineContentScript({
                                 text = elem.value.substring(elem.selectionStart ?? 0, elem.selectionEnd ?? 0).trim();
                             }
                         } else {
-                            $ui.show();
                             const x = getClientX(event);
                             const y = getClientY(event);
+                            let panel_position = new DOMRect(x, y, popupCardOffset, popupCardOffset);
+                            $ui.show();
                             wrapper.dispatchEvent(new CustomEvent("show-popup", {
                                 detail: {
-                                    getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset)
+                                    getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
+                                    selection: text,
                                 }
                             }));
                         }
@@ -275,8 +269,18 @@ export default defineContentScript({
                 document.addEventListener('mouseup', mouseUpHandler);
                 document.addEventListener('touchend', mouseUpHandler);
                 wrapper.addEventListener("hide-popup", () => {
-                    $ui.hide();
+                    WrapperHelper
+                        .then(({$ui}) => {
+                            $ui.hide();
+                        });
                 });
+
+                // @REMEMBER_ME: 在此处设置了$ui
+                WrapperHelper
+                    .set({$ui})
+                    .then(({$ui}) => {
+                        $ui.hide();
+                    });
 
                 ReactDOM.createRoot(wrapper).render(
                     <React.StrictMode>
@@ -292,18 +296,8 @@ export default defineContentScript({
             position: "overlay",
             append: "first",
         });
+
         app_container.mount();
-
-
-        browser.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-            switch (request.type) {
-                case "open-translator":
-                    const selectedText = getSelectedText();
-                    break;
-            }
-        });
-
-
     },
 
 });

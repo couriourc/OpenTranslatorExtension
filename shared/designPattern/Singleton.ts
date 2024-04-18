@@ -5,13 +5,14 @@ export class Singleton<T> {
     #loaded: boolean = false;
     #cached: ((instance: T) => any)[] = [];
 
-    set(newInstance: T): void {
+    set(newInstance: T): Singleton<T> {
         if (this.#instance) {
             this.#instance = newInstance;
-            return;
+            return this;
         }
         this.#instance = newInstance;
-        setTimeout(this._loaded.bind(this),);
+        setTimeout(this._loaded.bind(this));
+        return this;
     }
 
     get(): T {
@@ -28,7 +29,7 @@ export class Singleton<T> {
         return !!this.#instance;
     }
 
-    then(fn: ((instance: T) => any)): ThisType<T> {
+    then(fn: ((instance: T) => any)): Singleton<T> {
         if (this._is_loaded()) {
             fn(this.#instance!);
             return this;
@@ -39,3 +40,7 @@ export class Singleton<T> {
 }
 
 export const GPTEngine = new Singleton<AbstractOpenAI>();
+
+export const WrapperHelper = new Singleton<{
+    $ui:JQuery,
+}>();

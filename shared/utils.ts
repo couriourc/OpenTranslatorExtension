@@ -86,6 +86,7 @@ export async function fetchSSE(input: string, options: FetchSSEOptions) {
         onError(await resp.json());
         return;
     }
+    console.log(resp)
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = resp.body!.getReader();
     try {

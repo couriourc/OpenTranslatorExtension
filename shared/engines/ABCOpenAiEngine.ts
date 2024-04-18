@@ -96,8 +96,9 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
             method: 'POST',
             headers,
             body: JSON.stringify(body),
-            signal: req.signal,
             onMessage: async (msg) => {
+                console.log(msg)
+
                 if (finished) return;
                 let resp;
                 try {
@@ -146,6 +147,8 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
                 }
             },
             onError: (err) => {
+
+                console.log(err)
                 if (err instanceof Error) {
                     req.onError(err.message);
                     return;
