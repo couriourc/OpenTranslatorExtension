@@ -8,6 +8,7 @@ import {oneLine} from 'common-tags';
 import {universalFetch} from '../utils.ts';
 import qs from 'qs';
 import {getSettings} from "@/shared/config.ts";
+export type LanguageDetectionEngine = 'google' | 'baidu' | 'bing' | 'local'
 
 export type LangCode =
     | 'en'
@@ -391,3 +392,5 @@ export function intoLangCode(langCode: string | null): LangCode {
     }
     return DEFAULT_LANGUAGE_CODE;
 }
+
+export type TranslateMode = 'translate' | 'polishing' | 'summarize' | 'analyze' | 'explain-code' | 'big-bang'

@@ -1,7 +1,3 @@
-import {atom, useAtom} from "jotai";
-import {storage} from 'wxt/storage';
-import {atomWithStorage, atomWithReset} from 'jotai/utils';
-import {GPTEngine} from "@/shared/designPattern/Singleton.ts";
 import {atomWithImmer, useImmerAtom} from "jotai-immer";
 
 export interface IPanelStore {

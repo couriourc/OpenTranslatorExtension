@@ -11,11 +11,11 @@ import {
     CardFooter,
     CardHeader,
     Divider,
-    NextUIProvider,
     ScrollShadow,
     Select,
     SelectItem
 } from "@nextui-org/react";
+
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {popupCardOffset, zIndex} from "@/shared/constants";
@@ -23,13 +23,14 @@ import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
-import {GPTEngine, WrapperHelper} from "@/shared/designPattern/Singleton.ts";
+import {GPTEngine, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 import {ALL_DOM_EVENTS, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {Markdown} from "@/shared/components/Markdown.tsx";
 import {supportedLanguages} from "@/shared/lang";
+import {TranslatorAppWrapper} from "@/shared/components/App.tsx";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -328,13 +329,11 @@ export default defineContentScript({
                     });
 
                 ReactDOM.createRoot(wrapper).render(
-                    <React.StrictMode>
-                        <NextUIProvider>
-                            <DndProvider backend={HTML5Backend}>
-                                <ContentApp wrapper={wrapper}/>
-                            </DndProvider>
-                        </NextUIProvider>
-                    </React.StrictMode>,
+                    <TranslatorAppWrapper>
+                        <DndProvider backend={HTML5Backend}>
+                            <ContentApp wrapper={wrapper}/>
+                        </DndProvider>
+                    </TranslatorAppWrapper>,
                 );
             },
             name: "open-ai-translator",

@@ -1,6 +1,6 @@
 import {browser} from "wxt/browser";
-import {makeOpenTranslatorMessage} from "@/shared/requestor";
-import {GPTEngine} from "@/shared/designPattern/Singleton.ts";
+import {ALL_TAB_EVENS} from "@/shared/events";
+import {GPTEngine} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
 
@@ -43,7 +43,7 @@ export default defineBackground(() => {
     browser.contextMenus?.onClicked.addListener(async function (info) {
         const [tab] = await browser.tabs.query({active: true, lastFocusedWindow: true});
         tab.id &&
-        browser.tabs.sendMessage(tab.id, makeOpenTranslatorMessage(info));
+        browser.tabs.sendMessage(tab.id, ALL_TAB_EVENS["open-translator"](info));
     });
 
     browser.commands.onCommand.addListener(async (command) => {

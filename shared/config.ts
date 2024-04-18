@@ -10,3 +10,4 @@ export const getSettings:()=>ISettingsOption = () => {
         languageDetectionEngine: "local"
     };
 };
+
