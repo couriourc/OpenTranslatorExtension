@@ -6,17 +6,15 @@ import "@/assets/styles/style.less";
 import {motion, useDragControls} from "framer-motion";
 import {
     Avatar,
-    Button,
     Card,
     CardBody,
     CardFooter,
     CardHeader,
     Divider,
-    Dropdown,
-    DropdownItem,
-    DropdownMenu,
-    DropdownTrigger,
-    NextUIProvider
+    NextUIProvider,
+    ScrollShadow,
+    Select,
+    SelectItem
 } from "@nextui-org/react";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
@@ -29,8 +27,9 @@ import {GPTEngine, WrapperHelper} from "@/shared/designPattern/Singleton.ts";
 import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 import {ALL_DOM_EVENTS, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
-import Markdown from "react-markdown";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
+import {Markdown} from "@/shared/components/Markdown.tsx";
+import {supportedLanguages} from "@/shared/lang";
 
 function getSelectedText(): string {
     const selection = window.getSelection();
@@ -60,23 +59,15 @@ function EnginePanel({selection}: { selection: string }) {
         setIsLoaded(true);
     }, []);
     return <Card
-        style={{
-            minWidth: '280px',
-            cursor: 'pointer',
-            width: 'auto',
-            backdropFilter: 'blur(6px)',
-            borderRadius: '6px',
-            boxShadow: "0 0 4px 0 rgba(0,0,0,.3)",
-            boxSizing: 'border-box',
-            overflow: "visible"
-        }}
+        className={cx('w-full h-full min-h-300px')}
         ref={element => {
+            //@ts-ignore
             ref.current = element!;
         }}
         isFooterBlurred
     >
         <CardHeader
-            className={"justify-between py-0! mt-6px! box-border shrink-0"}
+            className={"justify-between py-0! mt-6px! box-border "}
         >
             <div
                 onPointerDown={startDrag}
@@ -84,36 +75,27 @@ function EnginePanel({selection}: { selection: string }) {
                 <LogoWithName></LogoWithName>
             </div>
 
-            {
-                Assert(is_loaded, <Dropdown
-                    portalContainer={ref.current!}
-                    className={"z-max"}
-                >
-                    <DropdownTrigger>
-                        <Button
-                            variant={"light"}
-                            className="capitalize"
-                            onClick={() => {
-                                GPTEngine.then((gpt) => {
-                                    gpt.send_pass();
-                                });
-                            }}
-                        >
-                            切换语言
-                        </Button>
-                    </DropdownTrigger>
-                    <DropdownMenu
-                        aria-label="Dropdown Variants"
-                        variant={"light"}
-                    >
-                        <DropdownItem key="English">English</DropdownItem>
-                        <DropdownItem key="中文" className="text-danger" color="danger">
-                            中文
-                        </DropdownItem>
-                    </DropdownMenu>
-                </Dropdown>)
-            }
+            <div className={"flex w-full justify-end gap-12px  items-center"}>
 
+                {
+                    Assert(is_loaded, <Select
+                        popoverProps={{
+                            portalContainer: ref.current!,
+                            className: cx("max-h-120px overflow-auto overflow-x-hidden"),
+                        }}
+                        size={"sm"}
+                        className="w-70px"
+                    >
+                        {
+                            supportedLanguages.map(([lang, name]) => {
+                                return <SelectItem key={lang} value={lang}>{name}</SelectItem>;
+                            })
+                        }
+                    </Select>)
+                }
+
+                <IoClose></IoClose>
+            </div>
         </CardHeader>
         <CardBody
             className={'flex flex-col w-full h-full box-border'}
@@ -122,7 +104,9 @@ function EnginePanel({selection}: { selection: string }) {
 
                 <Divider></Divider>
                 <CardBody>
-                    <Markdown>{message}</Markdown>
+                    <ScrollShadow hideScrollBar className="max-h-40vh">
+                        <Markdown>{message}</Markdown>
+                    </ScrollShadow>
                 </CardBody>
             </form>
         </CardBody>
@@ -210,8 +194,7 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
             $(ref.current as HTMLElement).css({
                 position: "fixed",
                 zIndex: zIndex,
-                minWidth: '280px',
-                width: '280px',
+                width: '380px',
                 top: postion?.top + "px",
                 left: postion?.left + "px",
             });

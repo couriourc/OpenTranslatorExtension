@@ -1,0 +1,14 @@
+{
+  "extName": {
+    "message": "OpenTranslator"
+  },
+  "extDescription": {
+    "message": "A translator for chatgpt"
+  },
+  "someAppText": {
+    "message": "Some translated text"
+  },
+  "changeTranslateTarget": {
+    "message": "Target Lang"
+  }
+}

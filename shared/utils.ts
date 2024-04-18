@@ -1,5 +1,7 @@
 //@ts-ignore
 import {createParser} from 'eventsource-parser';
+import {browser} from "wxt/browser";
+import EN from "@/public/_locales/en/messages.json";
 
 interface FetchSSEOptions extends RequestInit {
     onMessage(data: string): Promise<void>;
@@ -86,7 +88,7 @@ export async function fetchSSE(input: string, options: FetchSSEOptions) {
         onError(await resp.json());
         return;
     }
-    console.log(resp)
+    console.log(resp);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = resp.body!.getReader();
     try {
@@ -110,9 +112,13 @@ export async function fetchSSE(input: string, options: FetchSSEOptions) {
 
 export type UserEventType = MouseEvent | TouchEvent | PointerEvent
 export const getClientX = (event: UserEventType) => {
-    return event instanceof MouseEvent ? event.clientX : event.changedTouches[0].clientX
-}
+    return event instanceof MouseEvent ? event.clientX : event.changedTouches[0].clientX;
+};
 
 export const getClientY = (event: UserEventType) => {
-    return event instanceof MouseEvent ? event.clientY : event.changedTouches[0].clientY
-}
+    return event instanceof MouseEvent ? event.clientY : event.changedTouches[0].clientY;
+};
+
+export const $t = (message: keyof typeof EN) => browser.i18n.getMessage(message as any);
+
+export const universalFetch = fetch

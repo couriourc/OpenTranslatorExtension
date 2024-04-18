@@ -9,15 +9,17 @@ export default defineConfig({
         reloadCommand: 'Alt+T',
     },
     manifest: {
-        name: 'OpenTranslatorExtension',
+        name: '__MSG_extName__',
+        description: '__MSG_extDescription__',
+        default_locale: 'en',
         permissions: ['storage', "contextMenus", 'webRequest'],
         commands: {
-            'open-popup': {
+            'open-option': {
                 suggested_key: {
                     default: 'Ctrl+Shift+Y',
                     mac: 'Command+Shift+Y',
                 },
-                description: 'Open the popup',
+                description: 'Open the option',
             },
         }
     },

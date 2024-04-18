@@ -48,12 +48,14 @@ export default defineBackground(() => {
 
     browser.commands.onCommand.addListener(async (command) => {
         switch (command) {
-            case 'open-popup': {
+            case 'open-option':
                 await browser.windows.create({
                     type: 'popup',
-                    url: browser.runtime.getURL("/popup.html"),
+                    url: browser.runtime.getURL("/options.html"),
                 });
-            }
+                break;
+            case 'open-popup':
+                break;
         }
     });
 
