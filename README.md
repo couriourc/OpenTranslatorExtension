@@ -1,6 +1,6 @@
 # OpenAiTranslator
 
-## 功能点实现情况
+## :sparkles: 功能点
 - [x] Streaming mode is supported!
 - [x]It allows users to customize their translation text.
 - [x] One-click copying
@@ -11,8 +11,11 @@
 - [ ] Support screenshot translation
 - [ ] Support for vocabulary books, as well as support for generating memory aids based on the words in the vocabulary books
 
-## 部署引擎
+## :zap: 部署引擎
 
 ```sh
 docker run -d -p 8080:8080 -p 1337:1337 -p 7900:7900 --shm-size="2g" -v ${PWD}/hardir:/app/hardir hlohaus789/g4f:latest
 ```
+
+
+
