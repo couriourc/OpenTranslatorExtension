@@ -88,7 +88,6 @@ export async function fetchSSE(input: string, options: FetchSSEOptions) {
         onError(await resp.json());
         return;
     }
-    console.log(resp);
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const reader = resp.body!.getReader();
     try {
@@ -100,7 +99,7 @@ export async function fetchSSE(input: string, options: FetchSSEOptions) {
             }
             const str = new TextDecoder().decode(value);
             if (useJSONParser) {
-                jsonParser({value: str, done});
+                await jsonParser({value: str, done});
             } else {
                 sseParser.feed(str);
             }
@@ -121,4 +120,4 @@ export const getClientY = (event: UserEventType) => {
 
 export const $t = (message: keyof typeof EN) => browser.i18n.getMessage(message as any);
 
-export const universalFetch = fetch
+export const universalFetch = fetch;

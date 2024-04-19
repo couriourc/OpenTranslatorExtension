@@ -3,6 +3,7 @@ import {ALL_TAB_EVENS} from "@/shared/events";
 import {GPTEngine} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
+import {$t} from "@/shared/utils.ts";
 
 type Port = ReturnType<typeof browser.runtime.connect>
 
@@ -34,7 +35,7 @@ export default defineBackground(() => {
     browser.contextMenus?.create({
         id: browser.runtime.id,
         type: 'normal',
-        title: 'OpenAi translator',
+        title: $t("extName"),
         contexts: ['page', 'selection'],
     }, () => {
         browser.runtime.lastError;
@@ -43,7 +44,7 @@ export default defineBackground(() => {
     browser.contextMenus?.onClicked.addListener(async function (info) {
         const [tab] = await browser.tabs.query({active: true, lastFocusedWindow: true});
         tab.id &&
-        browser.tabs.sendMessage(tab.id, ALL_TAB_EVENS["open-translator"](info));
+        await browser.tabs.sendMessage(tab.id, ALL_TAB_EVENS["open-translator"](info));
     });
 
     browser.commands.onCommand.addListener(async (command) => {
@@ -80,7 +81,7 @@ export default defineBackground(() => {
                     controller.abort();
                     break;
                 case 'open':
-                    sendOpenAiWithStream(connector, message.detail, controller.signal);
+                    await sendOpenAiWithStream(connector, message.detail, controller.signal);
                     break;
             }
         });
