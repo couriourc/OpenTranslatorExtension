@@ -47,19 +47,21 @@ export type TAllCommandType = "open-option"
     | "open-popup"
     | "open-setting"
     | "open-translator";
+export type TSysCommand = 'abort' | "openai-engine";
+export type Commands = TAllCommandType | TSysCommand;
 
 export interface IAllCHANELEventMessage {
-    type: string;
-
+    type: Commands;
     [k: string]: any;
 }
 
-export const make_chanel_message = (type: TAllCommandType) => (...args: any[]) => (({
+
+export const make_chanel_message = (type: Commands) => (...args: any[]) => (({
     type: type,
     ...args
 }) as IAllCHANELEventMessage);
 
-export function trigger_channel_event(event_name: TAllCommandType, args?: any) {
+export function trigger_channel_event(event_name: Commands, args?: any) {
     MessagePool.then((connector) => {
         console.log(connector);
         connector.postMessage(make_chanel_message(event_name)(args));
