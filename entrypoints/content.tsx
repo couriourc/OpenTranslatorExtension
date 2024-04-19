@@ -5,8 +5,9 @@ import 'uno.css';
 import "@/assets/styles/style.less";
 import {motion, useDragControls} from "framer-motion";
 import {Blockquote} from '@mantine/core';
+import Typewriter from 'typewriter-effect';
 import {
-    Avatar,
+    Avatar, Button,
     Card,
     CardBody,
     CardFooter,
@@ -43,9 +44,11 @@ import {browser} from "wxt/browser";
 import {getSettings} from "@/shared/config.ts";
 import {CiSettings} from "react-icons/ci";
 import {Textarea} from "@nextui-org/input";
+import {Spinner} from "@nextui-org/spinner";
 
 
 let $ui: JQuery;
+let selection: string;
 
 function EnginePanel({selection}: { selection: string }) {
 
@@ -112,6 +115,9 @@ function EnginePanel({selection}: { selection: string }) {
                         listboxProps={{
                             className: cx("max-h-100px overflow-y-auto overflow-x-hidden"),
                         }}
+                        onSelect={(event) => {
+                            console.log(event);
+                        }}
                         placeholder={"翻译为X"}
                         size={"sm"}
                         className="w-70px"
@@ -129,13 +135,27 @@ function EnginePanel({selection}: { selection: string }) {
                     <ScrollShadow hideScrollBar className="max-h-40vh">
                         {
                             Assert(!!message,
-                                <Markdown>{message}</Markdown>,
+                                <Typewriter
+                                    onInit={(typewriter) => {
+                                        typewriter.typeString(message)
+                                            .callFunction(() => {
+                                                console.log('String typed out!');
+                                            })
+                                            .pauseFor(2500)
+                                            .start();
+                                    }}
+                                >
+                                </Typewriter>,
                                 <Blockquote color="blue"
                                             className={cx("p-0")}
-                                            cite="– Forrest Gump"
+                                            cite="– 我自己"
                                             mt="sm"
                                 >
-                                    {$t("EmptyTranslationMessage")}
+
+                                    <Spinner label={$t("EmptyTranslationMessage")}
+                                             color="default"
+                                             labelColor="foreground"
+                                    />
                                 </Blockquote>
                             )
                         }
@@ -162,10 +182,13 @@ function Assert(bool: boolean, Component: React.ReactNode, ComponentB?: React.Re
 function ClosePanelButton() {
     const [panel, setPanel] = usePanelStore();
 
+    const [ref] = useRef<HTMLElement>();
+
     function closePanel() {
         setPanel((state) => {
             state.isOpen = false;
             trigger_wrapper_jquery_event("hide-popup");
+            trigger_channel_event("abort");
         });
     }
 
@@ -192,12 +215,12 @@ function PanelHeader() {
     function showPanel() {
         setPanel((state) => {
             state.isOpen = true;
-        });
-    }
-
-    function closePanel() {
-        setPanel((state) => {
-            state.isOpen = false;
+            const openai = GPTEngine.get();
+            if (!selection) return;
+            openai.send_pass({
+                selection: selection,
+                to: '中文'
+            });
         });
     }
 
@@ -344,6 +367,7 @@ export default defineContentScript({
                             const x = getClientX(event);
                             const y = getClientY(event);
                             $ui.show();
+                            selection = text;
                             trigger_wrapper_jquery_event("show-popup", {
                                 getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
                                 selection: text,

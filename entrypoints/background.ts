@@ -11,11 +11,11 @@ import {$t} from "@/shared/utils.ts";
 
 type Port = ReturnType<typeof browser.runtime.connect>
 
-async function sendOpenAiWithStream(connector: Port, message: string, signal: AbortSignal) {
+async function sendOpenAiWithStream(connector: Port, message: Record<string, string>, signal: AbortSignal) {
     GPTEngine.then((gpt) => {
         gpt.sendMessage({
             assistantPrompts: [],
-            commandPrompt: "",
+            commandPrompt: message['selection'],
             onError(error: string): void {
             },
             onFinished(reason: string): void {
@@ -27,7 +27,7 @@ async function sendOpenAiWithStream(connector: Port, message: string, signal: Ab
             }): Promise<void> {
                 connector.postMessage(message);
             },
-            rolePrompt: message,
+            rolePrompt: `You are a excellent translator,and you need translate to ${message['to']}`,
             signal: signal,
         });
     });
@@ -107,7 +107,7 @@ export default defineBackground(async () => {
                     controller.abort();
                     break;
                 case 'openai-engine':
-                    await sendOpenAiWithStream(port, message.detail, controller.signal);
+                    await sendOpenAiWithStream(port, message, controller.signal);
                     break;
             }
         });

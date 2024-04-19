@@ -38,6 +38,7 @@
     "@nextui-org/scroll-shadow": "^2.1.15",
     "@nextui-org/select": "^2.1.22",
     "@nextui-org/skeleton": "^2.0.26",
+    "@nextui-org/spinner": "^2.0.28",
     "@nextui-org/system": "^2.1.0",
     "@nextui-org/theme": "^2.2.0",
     "@types/common-tags": "^1.8.4",
@@ -73,6 +74,7 @@
     "remark-gfm": "^4.0.0",
     "swr": "^2.2.5",
     "tailwindcss": "^3.4.3",
+    "typewriter-effect": "^2.21.0",
     "underscore": "^1.13.6",
     "unocss": "^0.59.0"
   },

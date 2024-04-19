@@ -207,11 +207,12 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
         this.port = undefined;
     }
 
-    send_pass() {
+    send_pass(args: Record<string, any>) {
         if (!this.port) return this;
         this.port?.postMessage({
             type: 'openai-engine',
             engine: this.name,
+            ...args
         });
         return this;
     }
