@@ -61,7 +61,6 @@ function EnginePanel({selection}: { selection: string }) {
     useEffect(() => {
         setIsLoaded(true);
     }, []);
-    const [setting] = useSettingStore();
     return <Card
         className={cx('w-full h-full min-h-300px')}
         ref={element => {
@@ -99,7 +98,6 @@ function EnginePanel({selection}: { selection: string }) {
                         base: "max-w-full",
                         input: "resize-y min-h-[40px]",
                     }}
-                    value={setting.openAiUrl}
                 />
                 {
                     Assert(is_loaded, <Select
@@ -370,16 +368,6 @@ export default defineContentScript({
 
                 document.addEventListener('mouseup', mouseUpHandler);
                 document.addEventListener('touchend', mouseUpHandler);
-
-//                const mouseDownHandler = async (event: UserEventType) => {
-//                    mousedownTarget = event.target!;
-//                    const settings = await getSettings();
-//                    if (!settings.pinned) {
-//                        trigger_wrapper_jquery_event("hide-popup");
-//                    }
-//                };
-//                document.addEventListener('mousedown', mouseDownHandler)
-//                document.addEventListener('touchstart', mouseDownHandler)
 
                 wrapper.addEventListener('click', (e) => {
                     e.preventDefault();
