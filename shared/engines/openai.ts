@@ -6,16 +6,18 @@ export class OpenAIEngine extends AbstractOpenAI {
 
 
     async getAPIKey(): Promise<string> {
-        const {apiKey} = await browser.storage.local.get(["apiKey"]);
-        return Promise.resolve(apiKey);
+        const {openAiKey} = await browser.storage.local.get(["openAiKey"]);
+        return Promise.resolve(openAiKey);
     }
 
     public getAPIModel(): Promise<string> {
         return Promise.resolve("gpt-3.5-turbo");
     }
 
-    public getAPIURL(): Promise<string> {
-        return Promise.resolve("http://localhost:1337");
+    async getAPIURL(): Promise<string> {
+        const {openAiUrl} = await browser.storage.local.get(["openAiUrl"]);
+
+        return Promise.resolve(openAiUrl);
     }
 
     public getAPIURLPath(): Promise<string> {

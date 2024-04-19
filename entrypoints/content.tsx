@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
 import "@/assets/styles/style.less";
-import {motion, useDragControls} from "framer-motion";
+import {useDragControls} from "framer-motion";
 import {Blockquote} from '@mantine/core';
 import Typewriter from 'typewriter-effect';
 import {
-    Avatar, Button,
+    Avatar,
     Card,
     CardBody,
     CardFooter,
@@ -20,24 +20,16 @@ import {
 
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
-import {
-    popupCardMaxWidth,
-    popupCardMinHeightAfterTranslation,
-    popupCardMinWidth,
-    popupCardOffset,
-    portName,
-    zIndex
-} from "@/shared/constants";
+import {popupCardMaxWidth, popupCardMinWidth, popupCardOffset, portName, zIndex} from "@/shared/constants";
 import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {IoClose, IoInformation, IoSettings} from "react-icons/io5";
-import {usePanelStore} from "@/shared/store";
+import {IoClose} from "react-icons/io5";
+import {usePanelStore, useSettingStore} from "@/shared/store";
 import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 import {$t, getCaretNodeType, getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 import {trigger_channel_event, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
-import {Markdown} from "@/shared/components/Markdown.tsx";
 import {supportedLanguages} from "@/shared/lang";
 import {TranslatorAppWrapper} from "@/shared/components/App.tsx";
 import {browser} from "wxt/browser";
@@ -69,6 +61,7 @@ function EnginePanel({selection}: { selection: string }) {
     useEffect(() => {
         setIsLoaded(true);
     }, []);
+    const [setting] = useSettingStore();
     return <Card
         className={cx('w-full h-full min-h-300px')}
         ref={element => {
@@ -106,6 +99,7 @@ function EnginePanel({selection}: { selection: string }) {
                         base: "max-w-full",
                         input: "resize-y min-h-[40px]",
                     }}
+                    value={setting.openAiUrl}
                 />
                 {
                     Assert(is_loaded, <Select
@@ -182,7 +176,6 @@ function Assert(bool: boolean, Component: React.ReactNode, ComponentB?: React.Re
 function ClosePanelButton() {
     const [panel, setPanel] = usePanelStore();
 
-
     function closePanel() {
         setPanel((state) => {
             state.isOpen = false;
@@ -254,7 +247,6 @@ function PanelHeader() {
         }
     </div>;
 }
-
 
 function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     const [panel, setPanel] = usePanelStore();
