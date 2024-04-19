@@ -1,6 +1,11 @@
 import React, {Suspense} from "react";
 import {Select, SelectItem, Skeleton} from "@nextui-org/react";
 import {LangCode, supportedLanguages} from "@/shared/lang";
+import {appStore, getPanelStore} from "@/shared/store";
+
+setTimeout(() => {
+    console.log(getPanelStore());
+});
 
 interface ILanguageSelectorProps {
     value?: string;
@@ -55,6 +60,7 @@ function LoadingPage() {
 }
 
 export default function App() {
+
     function changeLanguage() {
 
     }

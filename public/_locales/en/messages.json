@@ -10,5 +10,14 @@
   },
   "changeTranslateTarget": {
     "message": "Target Lang"
+  },
+  "ThereIsNoConnector": {
+    "message": "there is no connector"
+  },
+  "JustSupportTextTranslate": {
+    "message": "暂时只支持文本的翻译"
+  },
+  "EmptyTranslationMessage": {
+    "message": "Life is like an npm install – you never know what you are going to get."
   }
 }

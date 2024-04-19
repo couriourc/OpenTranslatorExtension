@@ -1,6 +1,10 @@
 import {browser} from "wxt/browser";
-import {ALL_TAB_EVENS} from "@/shared/events";
-import {GPTEngine} from "@/shared/design-pattern/Singleton.ts";
+import {
+    IAllCHANELEventMessage,
+    make_chanel_message,
+    TAllCommandType
+} from "@/shared/events";
+import {GPTEngine, MessagePool} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
 import {$t} from "@/shared/utils.ts";
@@ -26,11 +30,26 @@ async function sendOpenAiWithStream(connector: Port, message: string, signal: Ab
             rolePrompt: message,
             signal: signal,
         });
-
     });
 }
 
-export default defineBackground(() => {
+async function executeCommand(command: TAllCommandType) {
+    switch (command) {
+        case 'open-setting':
+        // Fall through
+        case 'open-option':
+            await browser.windows.create({
+                type: 'popup',
+                url: browser.runtime.getURL("/options.html"),
+            });
+            break;
+        case 'open-popup':
+            break;
+    }
+
+}
+
+export default defineBackground(async () => {
     // Setup context
     browser.contextMenus?.create({
         id: browser.runtime.id,
@@ -44,20 +63,12 @@ export default defineBackground(() => {
     browser.contextMenus?.onClicked.addListener(async function (info) {
         const [tab] = await browser.tabs.query({active: true, lastFocusedWindow: true});
         tab.id &&
-        await browser.tabs.sendMessage(tab.id, ALL_TAB_EVENS["open-translator"](info));
+        await browser.tabs.sendMessage(tab.id, make_chanel_message("open-popup")(info));
     });
 
-    browser.commands.onCommand.addListener(async (command) => {
-        switch (command) {
-            case 'open-option':
-                await browser.windows.create({
-                    type: 'popup',
-                    url: browser.runtime.getURL("/options.html"),
-                });
-                break;
-            case 'open-popup':
-                break;
-        }
+    /*@ts-ignore*/
+    browser.commands.onCommand.addListener(async (command: string, tabs) => {
+        await executeCommand(command as TAllCommandType);
     });
 
 
@@ -67,21 +78,36 @@ export default defineBackground(() => {
         }
     });
 
-    if (GPTEngine._is_loaded()) return;
+    if (GPTEngine.is_loaded()) return;
     const openai = new OpenAIEngine();
     GPTEngine.set(openai);
-
+    const sys_commands = await browser.commands.getAll();
+    let commands = new Set<string>(
+        (sys_commands
+            ?.filter(command => !!command.name)
+            ?.map((item) => {
+                return item.name as string;
+            }) ?? []).concat(
+            /*用于自定义命令*/
+            "open-setting",
+        )
+    );
     browser.runtime.onConnect.addListener((connector,) => {
         if (connector.name !== portName) return;
         const controller = new AbortController();
         console.assert(connector.name === portName);
-        connector.onMessage.addListener(async (message, ...params) => {
-            switch (message.action) {
+        MessagePool.set(connector);
+
+        connector.onMessage.addListener(async (message: IAllCHANELEventMessage, port) => {
+            if (commands.has(message.type)) {
+                return executeCommand(message.type as TAllCommandType);
+            }
+            switch (message.type) {
                 case 'abort':
                     controller.abort();
                     break;
-                case 'open':
-                    await sendOpenAiWithStream(connector, message.detail, controller.signal);
+                case 'openai-engine':
+                    await sendOpenAiWithStream(port, message.detail, controller.signal);
                     break;
             }
         });

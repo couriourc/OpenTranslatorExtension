@@ -4,6 +4,14 @@ import {CodeBlock as BaseCodeBlock} from 'react-code-block';
 import {Button} from '@nextui-org/react';
 import {useCopyToClipboard} from 'react-use';
 
+import {themes} from 'prism-react-renderer';
+import remarkGfm from 'remark-gfm';
+
+import {isDarkMode, useTheme} from "@/shared/hooks/useTheme.ts";
+import {cx} from "@emotion/css";
+import {pick} from "@/shared/utils.ts";
+import {UseThemeProps} from "next-themes/dist/types";
+
 export interface IMarkdownProps {
     children: string;
     linkTarget?: HTMLAttributeAnchorTarget;
@@ -17,6 +25,7 @@ interface ICodeBlockProps {
 export function CodeBlock({code, language}: ICodeBlockProps) {
     const [_, copyToClipboard] = useCopyToClipboard();
     const [isCopied, setIsCopied] = useState(false);
+    const {theme, systemTheme,} = useTheme();
     const copyCode = () => {
         copyToClipboard(code);
         setIsCopied(true);
@@ -28,9 +37,15 @@ export function CodeBlock({code, language}: ICodeBlockProps) {
 
         return () => clearTimeout(timeout);
     }, [isCopied]);
-
     return (
-        <BaseCodeBlock code={code} language={language}>
+        <BaseCodeBlock code={code} language={language}
+                       theme={
+                           pick(
+                               isDarkMode(theme as UseThemeProps['systemTheme']),
+                               themes.oneDark,
+                               themes.oneLight
+                           )}
+        >
             <div className={"relative"}>
                 <BaseCodeBlock.Code
                     style={{
@@ -39,7 +54,9 @@ export function CodeBlock({code, language}: ICodeBlockProps) {
                         paddingRight: '2rem',
                         borderRadius: '0.4rem',
                     }}
+                    className={cx("shadow-sm bg-info")}
                 >
+
                     <div
                         style={{
                             display: 'table-row',
@@ -68,7 +85,7 @@ export function CodeBlock({code, language}: ICodeBlockProps) {
                     </div>
                 </BaseCodeBlock.Code>
 
-                <Button onClick={copyCode} size={"sm"} variant={"flat"}>
+                <Button onClick={copyCode} size={"sm"} variant={"flat"} className={cx("absolute right-0 top-0")}>
                     <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -97,8 +114,12 @@ export function CodeBlock({code, language}: ICodeBlockProps) {
 }
 
 export function Markdown({children, linkTarget}: IMarkdownProps) {
+    const {theme} = useTheme();
+
     return (
         <ReactMarkdown
+            remarkPlugins={[remarkGfm]}
+            //            components={}
             components={{
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 a({node, className, children, ...props}) {
@@ -106,17 +127,20 @@ export function Markdown({children, linkTarget}: IMarkdownProps) {
                         target: linkTarget,
                         ...props,
                     };
-                    return <a {...newProps}>{children}</a>;
+                    return <a className={cx('underline decoration-dotted')} {...newProps}>{children}</a>;
                 },
                 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                // @ts-ignore
+                /*@ts-ignore*/
                 code({node, inline, className, children, ...props}) {
+                    console.log(node);
                     if (inline) {
                         return (
                             <code
                                 {...props}
                                 className={className}
                                 style={{
+                                    backgroundColor: theme,
+                                    color: theme,
                                     padding: '0.2rem',
                                     borderRadius: '0.2rem',
                                 }}
@@ -130,12 +154,14 @@ export function Markdown({children, linkTarget}: IMarkdownProps) {
                     if (match) {
                         language = match[1];
                     }
-                    const code = (children as string[])[0];
+                    console.log(`children-->${children}`);
+
+                    const code = (children as string);
                     return <CodeBlock code={code} language={language}/>;
                 },
             }}
-        >
-            {children}
-        </ReactMarkdown>
+        >{
+            children
+        }</ReactMarkdown>
     );
 }

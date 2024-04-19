@@ -5,12 +5,18 @@ export class Singleton<T> {
     #loaded: boolean = false;
     #cached: ((instance: T) => any)[] = [];
 
-    set(newInstance: T): Singleton<T> {
+    set(instance: T): Singleton<T> {
         if (this.#instance) {
-//            this.#instance = newInstance;
             return this;
         }
-        this.#instance = newInstance;
+        this.#instance = instance;
+        setTimeout(this._loaded.bind(this));
+        return this;
+    }
+
+    replace(instance: T): Singleton<T> {
+        /**/
+        this.#instance = instance;
         setTimeout(this._loaded.bind(this));
         return this;
     }
@@ -26,12 +32,12 @@ export class Singleton<T> {
         this.#cached.length = 0;
     }
 
-    _is_loaded() {
+    is_loaded() {
         return !!this.#instance;
     }
 
     then(fn: ((instance: T) => any)): Singleton<T> {
-        if (this._is_loaded()) {
+        if (this.is_loaded()) {
             fn(this.#instance!);
             return this;
         }
@@ -46,3 +52,5 @@ export const WrapperHelper = new Singleton<{
     $ui: JQuery,
     dom: HTMLElement
 }>();
+
+export const MessagePool = new Singleton<ReturnType<typeof browser.runtime.connect>>();

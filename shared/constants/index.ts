@@ -1,5 +1,5 @@
 export const zIndex = '2147483647'
-export const popupCardMinWidth = 220
+export const popupCardMinWidth = 380
 export const popupCardMinHeight = 220
 export const popupCardMinHeightAfterTranslation = 500
 export const popupCardMaxWidth = 660

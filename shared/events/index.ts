@@ -1,15 +1,10 @@
-import {WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
+import {MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 
 export const ALL_DOM_EVENTS = {
     "show-popup": (...args: any[]) => new CustomEvent("show-popup", ...args),
     "hide-popup": (...args: any[]) => new CustomEvent("hide-popup", ...args),
 };
-export const ALL_TAB_EVENS = {
-    "open-translator": (...args: any[]) => ({
-        type: "open-translator",
-        ...args
-    }),
-};
+
 
 export interface IWrapJqueryEventObj {
     unlisten(): any;
@@ -47,3 +42,27 @@ export function trigger_wrapper_jquery_event(event_name: keyof typeof ALL_DOM_EV
             }));
         });
 }
+
+export type TAllCommandType = "open-option"
+    | "open-popup"
+    | "open-setting"
+    | "open-translator";
+
+export interface IAllCHANELEventMessage {
+    type: string;
+
+    [k: string]: any;
+}
+
+export const make_chanel_message = (type: TAllCommandType) => (...args: any[]) => (({
+    type: type,
+    ...args
+}) as IAllCHANELEventMessage);
+
+export function trigger_channel_event(event_name: TAllCommandType, args?: any) {
+    MessagePool.then((connector) => {
+        console.log(connector);
+        connector.postMessage(make_chanel_message(event_name)(args));
+    });
+}
+

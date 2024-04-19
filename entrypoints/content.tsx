@@ -4,6 +4,7 @@ import {cx} from "@emotion/css";
 import 'uno.css';
 import "@/assets/styles/style.less";
 import {motion, useDragControls} from "framer-motion";
+import {Blockquote} from '@mantine/core';
 import {
     Avatar,
     Card,
@@ -18,37 +19,43 @@ import {
 
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
-import {popupCardOffset, zIndex} from "@/shared/constants";
-import {DndProvider} from "react-dnd";
+import {
+    popupCardMaxWidth,
+    popupCardMinHeightAfterTranslation,
+    popupCardMinWidth,
+    popupCardOffset,
+    portName,
+    zIndex
+} from "@/shared/constants";
+import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {IoClose} from "react-icons/io5";
+import {IoClose, IoInformation, IoSettings} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
-import {GPTEngine, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
-import {getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
+import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
+import {$t, getCaretNodeType, getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
-import {ALL_DOM_EVENTS, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
+import {trigger_channel_event, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {Markdown} from "@/shared/components/Markdown.tsx";
 import {supportedLanguages} from "@/shared/lang";
 import {TranslatorAppWrapper} from "@/shared/components/App.tsx";
+import {browser} from "wxt/browser";
+import {getSettings} from "@/shared/config.ts";
+import {CiSettings} from "react-icons/ci";
+import {Textarea} from "@nextui-org/input";
 
-function getSelectedText(): string {
-    const selection = window.getSelection();
-    return selection?.toString() ?? "";
-}
 
 let $ui: JQuery;
 
 function EnginePanel({selection}: { selection: string }) {
 
-    const CardMotion = motion(Card);
     const controls = useDragControls();
 
     function startDrag(event: React.PointerEvent<HTMLDivElement>) {
         controls.start(event);
     }
 
-    const [message, syncMessage] = useState<string>("# GPT 翻译助手");
+    const [message, syncMessage] = useState<string>(``);
     GPTEngine.then((gpt) => {
         gpt.on_message((msg: any) => {
             syncMessage((m) => m + msg.content);
@@ -76,14 +83,36 @@ function EnginePanel({selection}: { selection: string }) {
                 <LogoWithName></LogoWithName>
             </div>
 
-            <div className={"flex w-full justify-end gap-12px  items-center"}>
+            <div className={"flex w-full justify-end gap-4px  items-center"}>
+                <IoMdCopy className={cx("animate-fade-in")} title={"Copy Me"}></IoMdCopy>
+                <IoIosHeartEmpty className={cx("animate-fade-in")} title={"Collect Me"}></IoIosHeartEmpty>
+                <ClosePanelButton/>
+            </div>
+        </CardHeader>
+        <CardBody
+            className={'flex flex-col w-full h-full box-border overflow-visible'}
+        >
+            <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
+                <Textarea
+                    variant="bordered"
+                    placeholder="Enter your description"
+                    disableAnimation
+                    disableAutosize
+                    classNames={{
+                        base: "max-w-full",
+                        input: "resize-y min-h-[40px]",
+                    }}
+                />
                 {
                     Assert(is_loaded, <Select
                         popoverProps={{
                             portalContainer: ref.current!,
-                            className: cx("max-h-120px overflow-auto overflow-x-hidden"),
                         }}
+                        listboxProps={{
+                            className: cx("max-h-100px overflow-y-auto overflow-x-hidden"),
+                        }}
+                        placeholder={"翻译为X"}
                         size={"sm"}
                         className="w-70px"
                     >
@@ -95,39 +124,70 @@ function EnginePanel({selection}: { selection: string }) {
                     </Select>)
                 }
 
-                <IoClose></IoClose>
-            </div>
-        </CardHeader>
-        <CardBody
-            className={'flex flex-col w-full h-full box-border'}
-        >
-            <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
-
                 <Divider></Divider>
                 <CardBody>
                     <ScrollShadow hideScrollBar className="max-h-40vh">
-                        <Markdown>{message}</Markdown>
+                        {
+                            Assert(!!message,
+                                <Markdown>{message}</Markdown>,
+                                <Blockquote color="blue"
+                                            className={cx("p-0")}
+                                            cite="– Forrest Gump"
+                                            mt="sm"
+                                >
+                                    {$t("EmptyTranslationMessage")}
+                                </Blockquote>
+                            )
+                        }
                     </ScrollShadow>
                 </CardBody>
             </form>
         </CardBody>
         <CardFooter className={"flex justify-end"}>
             <div className="flex gap-1">
-                <IoMdCopy title={"Copy Me"}></IoMdCopy>
-                <IoIosHeartEmpty title={"Collect Me"}></IoIosHeartEmpty>
+                <CiSettings onClick={() => trigger_channel_event("open-setting")}
+                            className={"hover:text-primary cursor-pointer"}/>
+
             </div>
         </CardFooter>
     </Card>;
 }
 
-function Assert(bool: boolean, Component: React.ReactNode) {
-
+function Assert(bool: boolean, Component: React.ReactNode, ComponentB?: React.ReactNode) {
     if (bool) return Component;
+    if (ComponentB) return ComponentB;
     return null;
+}
+
+function ClosePanelButton() {
+    const [panel, setPanel] = usePanelStore();
+
+    function closePanel() {
+        setPanel((state) => {
+            state.isOpen = false;
+            trigger_wrapper_jquery_event("hide-popup");
+        });
+    }
+
+    return <Avatar
+        onClick={closePanel}
+        icon={<IoClose size={18}/>}
+        radius="md"
+        className="close w-6 h-6 text-tiny bg-transparent cursor-pointer hover:text-red animate-fade-in"
+        showFallback
+    />;
 }
 
 function PanelHeader() {
     const [panel, setPanel] = usePanelStore();
+    const [{isDragging}, drag, preview] = useDrag(() => ({
+        type: "drag",
+        collect(monitor) {
+            return {
+                isDragging: monitor.isDragging(),
+            };
+        }
+    }));
 
     function showPanel() {
         setPanel((state) => {
@@ -141,7 +201,6 @@ function PanelHeader() {
         });
     }
 
-    const MotionAvatar = motion(Avatar);
 
     const [is_hovering, set_is_hovering] = useState<boolean>(false);
     return <div className={cx(
@@ -155,25 +214,20 @@ function PanelHeader() {
                 }}
     >
         {
-            <MotionAvatar icon={<Logo/>}
-                          radius="md"
-                          className={
-                              cx("w-6 h-6  bg-transparent cursor-pointer hover:bg-#ecf0f1 dark:hover:bg-#57606f")
-                          }
-                          onClick={showPanel}
-                          showFallback
+            <Avatar icon={<Logo/>}
+                    radius="md"
+                    className={
+                        cx("w-6 h-6  bg-transparent cursor-pointer hover:bg-#ecf0f1 dark:hover:bg-#57606f")
+                    }
+                    onClick={showPanel}
+                    showFallback
+                    ref={drag}
             />
         }
         {
             Assert(
                 is_hovering,
-                <MotionAvatar
-                    onClick={closePanel}
-                    icon={<IoClose size={18}/>}
-                    radius="md"
-                    className="close w-6 h-6 text-tiny bg-transparent cursor-pointer hover:text-red animate-fade-in"
-                    showFallback
-                />
+                <ClosePanelButton/>
             )
         }
     </div>;
@@ -182,11 +236,6 @@ function PanelHeader() {
 
 function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     const [panel, setPanel] = usePanelStore();
-    /*@REMEMBER_ME 这里配置使用的引擎*/
-    useEffect(() => {
-        console.log("this");
-    }, []);
-    const [panel_position, setPanel_position] = useState<DOMRect>();
     const [selection, set_selection] = useState<string>("");
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
@@ -195,14 +244,27 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
             $(ref.current as HTMLElement).css({
                 position: "fixed",
                 zIndex: zIndex,
-                width: '380px',
+                minWidth: popupCardMinWidth + "px",
+                maxWidth: popupCardMaxWidth + "px",
+                minHeight: popupCardMinWidth + "px",
+                overflowX: 'hidden',
+                overflowY: 'auto',
                 top: postion?.top + "px",
                 left: postion?.left + "px",
             });
         };
-
-        return wrap_jquery_event("show-popup", listen).unlisten;
+        const listen_hide_popup = () => {
+            setPanel((panel) => {
+                panel.isOpen = false;
+            });
+        };
+        const events = [
+            wrap_jquery_event("show-popup", listen),
+            wrap_jquery_event("hide-popup", listen_hide_popup),
+        ];
+        return () => events.forEach(fn => fn.unlisten());
     });
+
 
     return <div
         ref={r => {
@@ -210,9 +272,8 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
             ref.current = r!;
         }}
     >
-        <PanelHeader/>
         {
-            Assert(panel.isOpen as boolean, <EnginePanel selection={selection}></EnginePanel>)
+            Assert(!panel.isOpen as boolean, <PanelHeader/>, <EnginePanel selection={selection}></EnginePanel>)
         }
     </div>;
 }
@@ -240,31 +301,13 @@ function getElementByXpath(path: string, parent = document) {
     return document.evaluate(path, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 }
 
-function makeShowPopupEvent<T extends any>(params: CustomEventInit<T>) {
-    return new CustomEvent("show-popup", params);
-}
-
-function receiveHidePopupEvent<T extends any>(obj: {
-    listen: Function,
-    unlisten: Function
-}) {
-    obj.unlisten = () => {
-    };
-    WrapperHelper.then(({$ui}) => {
-        console.log(ALL_DOM_EVENTS["hide-popup"]);
-        $ui.on("hide-popup", () => {
-            obj.listen();
-        });
-        obj.unlisten = () => $ui.off("hide-popup");
-    });
-}
-
 let is_showed_popup = false;
 export default defineContentScript({
     matches: ['<all_urls>'],
     runAt: "document_end",
     cssInjectionMode: "ui",
     async main(e) {
+        const settings = await getSettings();
         const app_container = await createShadowRootUi(e, {
             async onMount(wrapper: HTMLElement) {
                 $ui = $(wrapper);
@@ -273,7 +316,6 @@ export default defineContentScript({
                 let mousedownTarget: EventTarget;
                 const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
-
                     if (
                         (mousedownTarget instanceof HTMLInputElement || mousedownTarget instanceof HTMLTextAreaElement)) {
                         return;
@@ -281,18 +323,23 @@ export default defineContentScript({
                     window.setTimeout(async () => {
                         const sel = window.getSelection();
                         let text = (sel?.toString() ?? '').trim();
+                        const click_target = getElementByXpath(getPathTo(event.target as HTMLElement));
                         if (!text) {
                             if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
                                 const elem = event.target;
                                 text = elem.value.substring(elem.selectionStart ?? 0, elem.selectionEnd ?? 0).trim();
                             }
-                            console.log(getElementByXpath(getPathTo(event.target as HTMLElement)));
-                            if (is_showed_popup && !!getElementByXpath(getPathTo(event.target as HTMLElement))) {
+                            if (is_showed_popup && !!click_target) {
                                 trigger_wrapper_jquery_event("hide-popup");
                                 $ui.hide();
                                 is_showed_popup = false;
                             }
                         } else {
+                            if (is_showed_popup && !click_target) return;
+                            if (getCaretNodeType(event) !== Node.TEXT_NODE) {
+                                console.error($t("JustSupportTextTranslate"));
+                                return false;
+                            }
                             is_showed_popup = true;
                             const x = getClientX(event);
                             const y = getClientY(event);
@@ -309,6 +356,15 @@ export default defineContentScript({
                 document.addEventListener('mouseup', mouseUpHandler);
                 document.addEventListener('touchend', mouseUpHandler);
 
+//                const mouseDownHandler = async (event: UserEventType) => {
+//                    mousedownTarget = event.target!;
+//                    const settings = await getSettings();
+//                    if (!settings.pinned) {
+//                        trigger_wrapper_jquery_event("hide-popup");
+//                    }
+//                };
+//                document.addEventListener('mousedown', mouseDownHandler)
+//                document.addEventListener('touchstart', mouseDownHandler)
 
                 wrapper.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -342,7 +398,12 @@ export default defineContentScript({
         });
 
         /*@REMEMBER ME*/
+        const port = browser.runtime.connect({
+            name: portName,
+        });
+        MessagePool.set(port);
         GPTEngine.set(new OpenAIEngine().use_bypass());
+
         app_container.mount();
     },
 

@@ -2,11 +2,11 @@ import {AbstractOpenAI} from "@/shared/engines/ABCOpenAiEngine.ts";
 
 
 export class OpenAIEngine extends AbstractOpenAI {
-    openApiKey = "";
+    name = "openai";
+
 
     async getAPIKey(): Promise<string> {
         const {apiKey} = await browser.storage.local.get(["apiKey"]);
-        console.log(apiKey);
         return Promise.resolve(apiKey);
     }
 

@@ -1,9 +1,10 @@
 /* eslint-disable camelcase */
 import {IMessageRequest, IModel} from './interfaces';
 import {ABCGPTEngine} from "./ABCEngine.ts";
-import {fetchSSE} from "@/shared/utils.ts";
+import {$t, fetchSSE} from "@/shared/utils.ts";
 import {browser} from "wxt/browser";
 import {portName} from "@/shared/constants";
+import {MessagePool} from "@/shared/design-pattern/Singleton.ts";
 
 export abstract class AbstractOpenAI extends ABCGPTEngine {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -38,6 +39,8 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
     abstract getAPIURL(): Promise<string>
 
     abstract getAPIURLPath(): Promise<string>
+
+    abstract name: string;
 
     async getHeaders(): Promise<Record<string, string>> {
         const apiKey = await this.getAPIKey();
@@ -188,24 +191,27 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
     }
 
     uuid: number = 0;
-
     port?: ReturnType<typeof browser.runtime.connect>;
 
-
     use_bypass() {
-        this.port = browser.runtime.connect({
-            name: portName,
-        });
+        // 如果使用了 use_bypass ，就必须保证 MessagePool 存在
+        console.assert(MessagePool.is_loaded(), $t("ThereIsNoConnector"));
+        this.port = MessagePool.get();
         this.port.onMessage.addListener((msg) => {
-            console.log(msg);
             this.#listener.forEach(fn => fn(msg));
         });
         return this;
     }
 
+    unuse_bypass() {
+        this.port = undefined;
+    }
+
     send_pass() {
+        if (!this.port) return this;
         this.port?.postMessage({
-            message: "openai_info",
+            type: 'openai-engine',
+            engine: this.name,
         });
         return this;
     }
@@ -213,7 +219,14 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
     #listener = new Set<Function>();
 
     on_message(fn: Function) {
-        this.#listener.add(fn);
+        const listener = (message: any) => {
+            try {
+                fn(message);
+            } catch (e) {
+                console.error(e);
+            }
+        };
+        this.#listener.add(listener);
         return this;
     }
 }
