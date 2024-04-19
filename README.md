@@ -5,7 +5,7 @@
 ## :sparkles: 功能点
 
 - [x] Streaming mode is supported!
-  - [x]It allows users to customize their translation text.
+- [x] It allows users to customize their translation text.
 - [x] One-click copying
 - [x] Supports both OpenAI and Azure OpenAI Service at the same time
 - [ ] Our tool allows for mutual translation, polishing and summarization across 55 different languages.
