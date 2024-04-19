@@ -182,7 +182,6 @@ function Assert(bool: boolean, Component: React.ReactNode, ComponentB?: React.Re
 function ClosePanelButton() {
     const [panel, setPanel] = usePanelStore();
 
-    const [ref] = useRef<HTMLElement>();
 
     function closePanel() {
         setPanel((state) => {
