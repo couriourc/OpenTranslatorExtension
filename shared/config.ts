@@ -1,11 +1,10 @@
+import {LanguageDetectionEngine} from "@/shared/lang";
+
 export interface ISettingsOption {
-    languageDetectionEngine: "baidu" |
-        "google" |
-        "bing" |
-        "local";
+    languageDetectionEngine: LanguageDetectionEngine;
 }
 
-export const getSettings:()=>ISettingsOption = () => {
+export const getSettings: () => ISettingsOption = () => {
     return {
         languageDetectionEngine: "local"
     };
