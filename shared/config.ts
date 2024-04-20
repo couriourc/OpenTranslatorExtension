@@ -1,4 +1,5 @@
 import {LanguageDetectionEngine} from "@/shared/lang";
+import {UseThemeProps} from "next-themes/dist/types";
 
 export interface ISettingsOption {
     languageDetectionEngine: LanguageDetectionEngine;
@@ -6,6 +7,7 @@ export interface ISettingsOption {
     openAiKey: string;
     openAiUrl: string;
     openAiModel: string;
+    theme: UseThemeProps['systemTheme'];
 }
 
 export const defaultSettings: ISettingsOption = {
@@ -13,7 +15,8 @@ export const defaultSettings: ISettingsOption = {
     openAiKey: "noopenaikey",
     openAiUrl: "http://localhost:1337",
     pinned: false,
-    openAiModel: "gpt-3.5-turbo"
+    openAiModel: "gpt-3.5-turbo",
+    theme: undefined
 } as const;
 export const settingKeys = Object.keys(defaultSettings);
 export const getSettings: () => Promise<ISettingsOption> = async () => {

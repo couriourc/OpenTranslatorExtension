@@ -1,11 +1,12 @@
 import React, {Suspense} from "react";
-import {Select, SelectItem, Skeleton} from "@nextui-org/react";
+import {Card, CardBody, CardHeader, Radio, RadioGroup, Skeleton} from "@nextui-org/react";
 import {LangCode, supportedLanguages} from "@/shared/lang";
-import {appStore, getPanelStore} from "@/shared/store";
-
-setTimeout(() => {
-    console.log(getPanelStore());
-});
+import {useTheme} from "@/shared/hooks/useTheme.ts";
+import {useSettingStore} from "@/shared/store";
+import {LogoWithName} from "@/shared/components/Logo.tsx";
+import {saveSettings} from "@/shared/config.ts";
+import {UseThemeProps} from "next-themes/dist/types";
+import {$t} from "@/shared/utils.ts";
 
 interface ILanguageSelectorProps {
     value?: string;
@@ -31,19 +32,40 @@ const langOptions: LangOption = supportedLanguages.reduce((acc, [id, label]) => 
 })[]);
 
 function LanguageSelector({value, onChange, onBlur}: ILanguageSelectorProps) {
+    const {themes,theme, setTheme} = useTheme();
+    console.log(useSettingStore());
     return (
-        <Select
-            onChange={(event) => onChange(event.target.value)}
-            onBlur={onBlur}
-            value={value}
-            size={"sm"}
-        >
-            {
-                (langOptions as LangOption).map(({id, label}) => {
-                    return <SelectItem value={id} key={id} variant={"flat"}>{label}</SelectItem>;
-                })
-            }
-        </Select>
+        <Card className={"w-full h-100vh"}>
+            <CardHeader className="flex  z-0 top-1 flex-col !items-start">
+                <LogoWithName></LogoWithName>
+            </CardHeader>
+            <CardBody className={"z-10  "}>
+                <RadioGroup
+                    label={$t("SelectYourFavoriteTheme")}
+                    orientation="horizontal"
+                    value={theme}
+                    onChange={async (event) => {
+                        const value = event.target.value! as UseThemeProps['systemTheme'];
+                        await saveSettings({
+                            theme: value,
+                        });
+                        //@ts-ignore
+                        setTheme(value);
+                    }}
+                >
+                    {
+                        themes.map(theme => {
+                            return <Radio
+                                value={theme}
+                                key={theme}
+                                className={"cursor-pointer"}>{theme}</Radio>;
+                        })
+                    }
+                </RadioGroup>
+                <div className={"flex gap-1"}>
+                </div>
+            </CardBody>
+        </Card>
     );
 }
 

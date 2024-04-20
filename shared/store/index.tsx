@@ -17,7 +17,8 @@ export const getPanelStore = () => appStore.get(PanelStore);
 
 /*FIXED: Sync LocalStorage*/
 export const settingStore = atomWithImmer<ISettingsOption>(defaultSettings);
-export const useSettingStore = ()=>useImmerAtom(settingStore);
+export const useSettingStore = () => useImmerAtom(settingStore);
+export const getSettingStore = () => appStore.get(settingStore);
 /*同步配置信息*/
 setTimeout(async () => {
     appStore.set(settingStore, await getSettings());

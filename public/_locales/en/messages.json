@@ -19,5 +19,8 @@
   },
   "EmptyTranslationMessage": {
     "message": "Life is like an npm install – So take a coffee"
+  },
+  "SelectYourFavoriteTheme" : {
+    "message": "选择最爱的主题"
   }
 }
