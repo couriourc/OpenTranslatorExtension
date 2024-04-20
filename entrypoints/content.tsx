@@ -24,7 +24,7 @@ import {popupCardMaxWidth, popupCardMinWidth, popupCardOffset, portName, zIndex}
 import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoClose} from "react-icons/io5";
-import {usePanelStore, useSettingStore} from "@/shared/store";
+import {usePanelStore} from "@/shared/store";
 import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 import {$t, getCaretNodeType, getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
@@ -62,7 +62,7 @@ function EnginePanel({selection}: { selection: string }) {
         setIsLoaded(true);
     }, []);
     return <Card
-        className={cx('w-full h-full min-h-300px')}
+        className={cx('w-full h-full min-h-300px w-99% m-auto')}
         ref={element => {
             //@ts-ignore
             ref.current = element!;
@@ -217,7 +217,7 @@ function PanelHeader() {
 
     const [is_hovering, set_is_hovering] = useState<boolean>(false);
     return <div className={cx(
-        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em  w-fit items-center ",
+        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em  w-fit items-center select-none",
     )}
                 onMouseEnter={(e) => {
                     set_is_hovering(true);
@@ -259,6 +259,8 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
                 minWidth: popupCardMinWidth + "px",
                 maxWidth: popupCardMaxWidth + "px",
                 minHeight: popupCardMinWidth + "px",
+                padding: "1em",
+                boxSizing: "border-box",
                 overflowX: 'hidden',
                 overflowY: 'auto',
                 top: postion?.top + "px",
@@ -320,6 +322,24 @@ export default defineContentScript({
     cssInjectionMode: "ui",
     async main(e) {
         const settings = await getSettings();
+        const container = createIntegratedUi(e, {
+            position: "modal",
+            tag: "div",
+            async onMount(element) {
+                $(element).css(
+                    {
+                        width: "100vw",
+                        height: "100vh",
+                        position: "fixed",
+                        top: 0,
+                        left: 0,
+                        pointerEvents: "none"
+                    }
+                );
+
+            }
+        });
+        container.mount();
         const app_container = await createShadowRootUi(e, {
             async onMount(wrapper: HTMLElement) {
                 $ui = $(wrapper);
@@ -386,8 +406,9 @@ export default defineContentScript({
                     .then(({$ui}) => {
                         $ui.hide();
                     });
-
-                ReactDOM.createRoot(wrapper).render(
+                const div = document.createElement("div");
+                wrapper.append(div);
+                ReactDOM.createRoot(div).render(
                     <TranslatorAppWrapper>
                         <DndProvider backend={HTML5Backend}>
                             <ContentApp wrapper={wrapper}/>
