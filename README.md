@@ -2,7 +2,8 @@
 
 > 考虑到快速MVP，目前关掉了cz以及基本的 husky 限定
 
-![post](docs/title-header.png)
+[//]: # (![post]&#40;&#41;)
+<img src="docs/title-header.png" alt="title-header" width="100%">
 
 ## :sparkles: 功能点
 
