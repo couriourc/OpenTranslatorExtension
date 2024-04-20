@@ -1,9 +1,5 @@
 import {browser} from "wxt/browser";
-import {
-    IAllCHANELEventMessage,
-    make_chanel_message,
-    TAllCommandType
-} from "@/shared/events";
+import {IAllCHANELEventMessage, make_chanel_message, TAllCommandType} from "@/shared/events";
 import {GPTEngine, MessagePool} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
@@ -65,17 +61,9 @@ export default defineBackground(async () => {
         tab.id &&
         await browser.tabs.sendMessage(tab.id, make_chanel_message("open-popup")(info));
     });
-
     /*@ts-ignore*/
     browser.commands.onCommand.addListener(async (command: string, tabs) => {
         await executeCommand(command as TAllCommandType);
-    });
-
-
-    browser.runtime.onInstalled.addListener(({reason}) => {
-        if (reason === "install") {
-            browser.storage.local.set({installData: Date.now()});
-        }
     });
 
     if (GPTEngine.is_loaded()) return;
@@ -111,6 +99,13 @@ export default defineBackground(async () => {
                     break;
             }
         });
+    });
+
+
+    browser.runtime.onInstalled.addListener(({reason}) => {
+        if (reason === "install") {
+            browser.storage.local.set({installData: Date.now()});
+        }
     });
 
 });

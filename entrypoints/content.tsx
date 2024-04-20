@@ -4,7 +4,6 @@ import {cx} from "@emotion/css";
 import 'uno.css';
 import "@/assets/styles/style.less";
 import {useDragControls} from "framer-motion";
-import {Blockquote} from '@mantine/core';
 import {
     Avatar,
     Card,
@@ -19,28 +18,39 @@ import {
 
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
-import {popupCardMaxWidth, popupCardMinWidth, popupCardOffset, portName, zIndex} from "@/shared/constants";
+import {
+    injectedShadowName,
+    popupCardMaxWidth,
+    popupCardMinWidth,
+    popupCardOffset,
+    portName,
+    zIndex
+} from "@/shared/constants";
 import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
 import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
-import {$t, getCaretNodeType, getClientX, getClientY, UserEventType} from "@/shared/utils.ts";
+import {$t, getCaretNodeType, getClientX, getClientY, selectCursorWord, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
-import {trigger_channel_event, trigger_wrapper_jquery_event, wrap_jquery_event} from "@/shared/events";
+import {
+    IAllCHANELEventMessage,
+    trigger_channel_event,
+    trigger_wrapper_jquery_event,
+    wrap_jquery_event
+} from "@/shared/events";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {supportedLanguages} from "@/shared/lang";
 import {TranslatorAppWrapper} from "@/shared/components/App.tsx";
 import {browser} from "wxt/browser";
 import {getSettings} from "@/shared/config.ts";
 import {CiSettings} from "react-icons/ci";
-import {Textarea} from "@nextui-org/input";
-import {Spinner} from "@nextui-org/spinner";
 import {Markdown} from "@/shared/components/Markdown.tsx";
 import {LoadingCoffee} from "@/shared/components/Animation.tsx";
 
 let $ui: JQuery;
 let selection: string;
+
 
 function EnginePanel({selection}: { selection: string }) {
 
@@ -90,17 +100,13 @@ function EnginePanel({selection}: { selection: string }) {
             <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
 
-
-
                 <Divider></Divider>
                 <CardBody>
                     <ScrollShadow hideScrollBar className="max-h-40vh">
                         {
                             Assert(!!message,
                                 <Markdown>{message}</Markdown>,
-                                <LoadingCoffee
-                                    style={{height: '200px', width: '100%'}}
-                                />
+                                <LoadingCoffee/>
                             )
                         }
                     </ScrollShadow>
@@ -232,7 +238,7 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
         const listen = (e: any) => {
             const postion = (e)?.getBoundingClientRect();
             $(ref.current as HTMLElement).css({
-                position: "fixed",
+                position: "absolute",
                 zIndex: zIndex,
                 minWidth: popupCardMinWidth + "px",
                 maxWidth: popupCardMaxWidth + "px",
@@ -241,8 +247,8 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
                 boxSizing: "border-box",
                 overflowX: 'hidden',
                 overflowY: 'auto',
-                top: postion?.top + "px",
-                left: postion?.left + "px",
+                top: 0 + "px",
+                left: 0 + "px",
                 pointerEvents: 'none'
             });
         };
@@ -302,24 +308,51 @@ export default defineContentScript({
     async main(e) {
         const settings = await getSettings();
         const app_container = await createShadowRootUi(e, {
-            name: "open-ai-translator",
+            name: injectedShadowName,
             position: "overlay",
             append: "after",
             async onMount(wrapper: HTMLElement) {
                 $ui = $(wrapper);
 
-                let lastMouseEvent;
+                const $container = $(app_container.shadowHost);
+                let lastMouseEvent: UserEventType;
                 let mousedownTarget: EventTarget;
+                document.addEventListener("scroll", (event) => {
+                    console.log(event);
+                });
+
+                browser.runtime.onMessage.addListener(function (request: IAllCHANELEventMessage) {
+                    if (request.type === 'open-translator') {
+                        if (window !== window.top) return;
+                        const text = request.selectionText ?? '';
+                        const x = lastMouseEvent ? getClientX(lastMouseEvent) : 0;
+                        const y = lastMouseEvent ? getClientY(lastMouseEvent) : 0;
+                        trigger_wrapper_jquery_event("show-popup", {
+                            getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
+                            selection: text,
+                        });
+                    }
+                });
                 const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
+                    const settings = await getSettings();
+
                     if (
-                        (mousedownTarget instanceof HTMLInputElement || mousedownTarget instanceof HTMLTextAreaElement)) {
+                        (mousedownTarget instanceof HTMLInputElement || mousedownTarget instanceof HTMLTextAreaElement)
+                        && settings.selectInputElementsText === false
+                    ) {
                         return;
                     }
+                    if (event.ctrlKey) {
+                        selectCursorWord(event);
+                    }
+
                     window.setTimeout(async () => {
                         const sel = window.getSelection();
                         let text = (sel?.toString() ?? '').trim();
                         const click_target = getElementByXpath(getPathTo(event.target as HTMLElement));
+
+
                         if (!text) {
                             if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
                                 const elem = event.target;
@@ -341,6 +374,11 @@ export default defineContentScript({
                             const y = getClientY(event);
                             $ui.show();
                             selection = text;
+                            $container.css({
+                                top: y + "px",
+                                left: x + "px",
+                                position: "fixed"
+                            });
                             trigger_wrapper_jquery_event("show-popup", {
                                 getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
                                 selection: text,

@@ -4,7 +4,7 @@ import {useTheme} from "@/shared/hooks/useTheme.ts";
 import {forwardRef, useEffect, useRef} from "react";
 import {css} from "@emotion/css";
 
-export const LoadingCoffee = forwardRef<Player>((props, ref) => {
+export const LoadingCoffee = forwardRef<Player>((props:Record<string, any>, ref) => {
     const {theme} = useTheme();
     return <Player
         autoplay
@@ -12,9 +12,7 @@ export const LoadingCoffee = forwardRef<Player>((props, ref) => {
         src={PleaseWaitLottieJson}
         {...props}
         ref={ref}
-        className={css`
-            
-        `}
+        style={{height: '200px', width: '100%'}}
     >
     </Player>;
 

@@ -141,3 +141,79 @@ export const $t = (message: keyof typeof EN) => browser.i18n.getMessage(message 
 
 export const universalFetch = fetch;
 export const pick = (flag: boolean, a: any, b: any) => flag ? a : b;
+
+export const caretPositionFromPoint = (x: number, y: number) => {
+
+    let offsetNode, offset;
+    /*@ts-ignore*/
+    if (document["caretPositionFromPoint"]) {
+        /*@ts-ignore*/
+        const pos = document['caretPositionFromPoint'](x, y);
+        if (!pos) {
+            return {
+                offsetNode, offset
+            };
+        }
+        offsetNode = pos.offsetNode;
+        offset = pos.offset;
+        /*@ts-ignore*/
+    } else if (document['caretRangeFromPoint']) {
+        /*@ts-ignore*/
+        const pos = document['caretRangeFromPoint'](x, y);
+        if (!pos) {
+            return {
+                offsetNode, offset
+            };
+        }
+        offsetNode = pos.startContainer;
+        offset = pos.startOffset;
+    } else {
+        return {offsetNode, offset};
+    }
+    return {
+        offsetNode,
+        offset
+    };
+};
+
+/**
+ * @param {UserEventType} e
+ * @returns {void}
+ */
+export function selectCursorWord(e: UserEventType): void {
+    const x = getClientX(e);
+    const y = getClientY(e);
+
+
+    const sel = window.getSelection();
+    if (!sel) return;
+    sel.removeAllRanges();
+
+    const {offsetNode, offset} = caretPositionFromPoint(x, y);
+
+
+    if (offsetNode?.nodeType === Node.TEXT_NODE) {
+        const textNode = offsetNode;
+        const content = textNode.data;
+        const head = (content.slice(0, offset).match(/[-_a-z]+$/i) || [''])[0];
+        const tail = (content.slice(offset).match(/^([-_a-z]+|[\u4e00-\u9fa5])/i) || [''])[0];
+        if (head.length <= 0 && tail.length <= 0) {
+            return;
+        }
+
+        const range = document.createRange();
+        range.setStart(textNode, offset - head.length);
+        range.setEnd(textNode, offset + tail.length);
+        const rangeRect = range.getBoundingClientRect();
+
+        if (rangeRect.left <= x &&
+            rangeRect.right >= x &&
+            rangeRect.top <= y &&
+            rangeRect.bottom >= y
+        ) {
+            sel.addRange(range);
+        }
+
+        range.detach();
+    }
+}

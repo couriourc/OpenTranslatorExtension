@@ -8,6 +8,7 @@ export interface ISettingsOption {
     openAiUrl: string;
     openAiModel: string;
     theme: UseThemeProps['systemTheme'];
+    selectInputElementsText:boolean;
 }
 
 export const defaultSettings: ISettingsOption = {
@@ -16,7 +17,8 @@ export const defaultSettings: ISettingsOption = {
     openAiUrl: "http://localhost:1337",
     pinned: false,
     openAiModel: "gpt-3.5-turbo",
-    theme: undefined
+    theme: undefined,
+    selectInputElementsText: false,
 } as const;
 export const settingKeys = Object.keys(defaultSettings);
 export const getSettings: () => Promise<ISettingsOption> = async () => {
