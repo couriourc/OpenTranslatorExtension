@@ -3,7 +3,6 @@ import {IMessageRequest, IModel} from './interfaces';
 import {ABCGPTEngine} from "./ABCEngine.ts";
 import {$t, fetchSSE} from "@/shared/utils.ts";
 import {browser} from "wxt/browser";
-import {portName} from "@/shared/constants";
 import {MessagePool} from "@/shared/design-pattern/Singleton.ts";
 
 export abstract class AbstractOpenAI extends ABCGPTEngine {
@@ -228,6 +227,8 @@ export abstract class AbstractOpenAI extends ABCGPTEngine {
             }
         };
         this.#listener.add(listener);
-        return this;
+        return () => {
+            this.#listener.delete(listener);
+        };
     }
 }

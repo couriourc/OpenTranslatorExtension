@@ -5,7 +5,6 @@ import 'uno.css';
 import "@/assets/styles/style.less";
 import {useDragControls} from "framer-motion";
 import {Blockquote} from '@mantine/core';
-import Typewriter from 'typewriter-effect';
 import {
     Avatar,
     Card,
@@ -37,7 +36,8 @@ import {getSettings} from "@/shared/config.ts";
 import {CiSettings} from "react-icons/ci";
 import {Textarea} from "@nextui-org/input";
 import {Spinner} from "@nextui-org/spinner";
-
+import {Markdown} from "@/shared/components/Markdown.tsx";
+import {LoadingCoffee} from "@/shared/components/Animation.tsx";
 
 let $ui: JQuery;
 let selection: string;
@@ -51,16 +51,16 @@ function EnginePanel({selection}: { selection: string }) {
     }
 
     const [message, syncMessage] = useState<string>(``);
-    GPTEngine.then((gpt) => {
-        gpt.on_message((msg: any) => {
-            syncMessage((m) => m + msg.content);
-        });
-    });
-    const ref = useRef<HTMLDivElement>(null);
-    const [is_loaded, setIsLoaded] = useState(false);
+    const gpt = GPTEngine.get();
     useEffect(() => {
         setIsLoaded(true);
+        return gpt.on_message((msg: any) => {
+            syncMessage((m) => m + msg.content);
+        });
     }, []);
+    const ref = useRef<HTMLDivElement>(null);
+    const [is_loaded, setIsLoaded] = useState(false);
+
     return <Card
         className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto')}
         ref={element => {
@@ -89,71 +89,47 @@ function EnginePanel({selection}: { selection: string }) {
         >
             <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
-                <Textarea
-                    aria-label={"一些 Prompt 或者原文"}
-                    variant="bordered"
-                    placeholder="Enter your description"
-                    disableAnimation
-                    disableAutosize
-                    classNames={{
-                        base: "max-w-full",
-                        input: "resize-y min-h-[40px]",
-                    }}
-                />
-                {
-                    Assert(is_loaded, <Select
-                        aria-label={"翻译为"}
-                        popoverProps={{
-                            portalContainer: ref.current!,
-                        }}
-                        listboxProps={{
-                            className: cx("max-h-100px overflow-y-auto overflow-x-hidden"),
-                        }}
-                        onSelect={(event) => {
-                            console.log(event);
-                        }}
-                        placeholder={"翻译为X"}
-                        size={"sm"}
-                        className="w-70px"
-                    >
-                        {
-                            supportedLanguages.map(([lang, name]) => {
-                                return <SelectItem key={lang} value={lang}>{name}</SelectItem>;
-                            })
-                        }
-                    </Select>)
-                }
+
+
 
                 <Divider></Divider>
                 <CardBody>
                     <ScrollShadow hideScrollBar className="max-h-40vh">
                         {
                             Assert(!!message,
-                                <Typewriter
-                                    onInit={(typewriter) => {
-                                        typewriter.typeString(message)
-                                            .callFunction(() => {
-                                                console.log('String typed out!');
-                                            })
-                                            .pauseFor(2500)
-                                            .start();
-                                    }}
-                                >
-                                </Typewriter>,
-                                <Blockquote color="blue"
-                                            className={cx("p-0")}
-                                            cite="– 我自己"
-                                            mt="sm"
-                                >
-
-                                    <Spinner label={$t("EmptyTranslationMessage")}
-                                             color="default"
-                                             labelColor="foreground"
-                                    />
-                                </Blockquote>
+                                <Markdown>{message}</Markdown>,
+                                <LoadingCoffee
+                                    style={{height: '200px', width: '100%'}}
+                                />
                             )
                         }
                     </ScrollShadow>
+                    <div className={"flex items-center"}>
+
+                        {
+                            Assert(is_loaded, <Select
+                                aria-label={"翻译为"}
+                                popoverProps={{
+                                    portalContainer: ref.current!,
+                                }}
+                                listboxProps={{
+                                    className: cx("max-h-100px overflow-y-auto overflow-x-hidden"),
+                                }}
+                                onSelect={(event) => {
+                                    console.log(event);
+                                }}
+                                placeholder={"翻译为X"}
+                                size={"sm"}
+                                className="w-70px"
+                            >
+                                {
+                                    supportedLanguages.map(([lang, name]) => {
+                                        return <SelectItem key={lang} value={lang}>{name}</SelectItem>;
+                                    })
+                                }
+                            </Select>)
+                        }
+                    </div>
                 </CardBody>
             </form>
         </CardBody>
