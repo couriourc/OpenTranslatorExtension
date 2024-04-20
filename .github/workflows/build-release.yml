@@ -28,12 +28,14 @@ jobs:
         run: |
           pnpm zip
           pnpm zip:firefox
+          pnpm zip:chrome
+          pnpm zip:edge
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: .output/* # the folder which has all the files that you want to release
+          file: .output/*.zip # the folder which has all the files that you want to release
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
