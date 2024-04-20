@@ -11,6 +11,8 @@
     "build:firefox": "wxt build -b firefox",
     "zip": "wxt zip",
     "zip:firefox": "wxt zip -b firefox",
+    "zip:chrome": "wxt zip -b chrome",
+    "zip:edge": "wxt zip -b edge",
     "compile": "tsc --noEmit",
     "postinstall": "wxt prepare",
     "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s -r 0",
