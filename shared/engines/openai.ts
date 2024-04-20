@@ -1,4 +1,5 @@
 import {AbstractOpenAI} from "@/shared/engines/ABCOpenAiEngine.ts";
+import {getSettings} from "@/shared/config.ts";
 
 
 export class OpenAIEngine extends AbstractOpenAI {
@@ -6,17 +7,17 @@ export class OpenAIEngine extends AbstractOpenAI {
 
 
     async getAPIKey(): Promise<string> {
-        const {openAiKey} = await browser.storage.local.get(["openAiKey"]);
+        const {openAiKey} = await getSettings();
         return Promise.resolve(openAiKey);
     }
 
-    public getAPIModel(): Promise<string> {
-        return Promise.resolve("gpt-3.5-turbo");
+    async getAPIModel(): Promise<string> {
+        const {openAiModel} = await getSettings();
+        return Promise.resolve(openAiModel);
     }
 
     async getAPIURL(): Promise<string> {
-        const {openAiUrl} = await browser.storage.local.get(["openAiUrl"]);
-
+        const {openAiUrl} = await getSettings();
         return Promise.resolve(openAiUrl);
     }
 

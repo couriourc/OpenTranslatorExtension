@@ -62,7 +62,7 @@ function EnginePanel({selection}: { selection: string }) {
         setIsLoaded(true);
     }, []);
     return <Card
-        className={cx('w-full h-full min-h-300px w-99% m-auto')}
+        className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto')}
         ref={element => {
             //@ts-ignore
             ref.current = element!;
@@ -90,6 +90,7 @@ function EnginePanel({selection}: { selection: string }) {
             <form className={cx('flex flex-col gap-12px')} onSubmit={(e) => e.preventDefault()}>
 
                 <Textarea
+                    aria-label={"一些 Prompt 或者原文"}
                     variant="bordered"
                     placeholder="Enter your description"
                     disableAnimation
@@ -101,6 +102,7 @@ function EnginePanel({selection}: { selection: string }) {
                 />
                 {
                     Assert(is_loaded, <Select
+                        aria-label={"翻译为"}
                         popoverProps={{
                             portalContainer: ref.current!,
                         }}
@@ -217,7 +219,7 @@ function PanelHeader() {
 
     const [is_hovering, set_is_hovering] = useState<boolean>(false);
     return <div className={cx(
-        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em  w-fit items-center select-none",
+        "flex bg-white! shadow-sm gap-4px my-4px px-8px rounded-2em h-2em  w-fit items-center select-none pointer-events-auto",
     )}
                 onMouseEnter={(e) => {
                     set_is_hovering(true);
@@ -265,6 +267,7 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
                 overflowY: 'auto',
                 top: postion?.top + "px",
                 left: postion?.left + "px",
+                pointerEvents: 'none'
             });
         };
         const listen_hide_popup = () => {
@@ -322,25 +325,10 @@ export default defineContentScript({
     cssInjectionMode: "ui",
     async main(e) {
         const settings = await getSettings();
-        const container = createIntegratedUi(e, {
-            position: "modal",
-            tag: "div",
-            async onMount(element) {
-                $(element).css(
-                    {
-                        width: "100vw",
-                        height: "100vh",
-                        position: "fixed",
-                        top: 0,
-                        left: 0,
-                        pointerEvents: "none"
-                    }
-                );
-
-            }
-        });
-        container.mount();
         const app_container = await createShadowRootUi(e, {
+            name: "open-ai-translator",
+            position: "overlay",
+            append: "after",
             async onMount(wrapper: HTMLElement) {
                 $ui = $(wrapper);
 
@@ -408,6 +396,7 @@ export default defineContentScript({
                     });
                 const div = document.createElement("div");
                 wrapper.append(div);
+                div.style.pointerEvents = "auto";
                 ReactDOM.createRoot(div).render(
                     <TranslatorAppWrapper>
                         <DndProvider backend={HTML5Backend}>
@@ -415,10 +404,7 @@ export default defineContentScript({
                         </DndProvider>
                     </TranslatorAppWrapper>,
                 );
-            },
-            name: "open-ai-translator",
-            position: "overlay",
-            append: "first",
+            }
         });
 
         /*@REMEMBER ME*/

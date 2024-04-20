@@ -5,6 +5,7 @@ export interface ISettingsOption {
     pinned: boolean;
     openAiKey: string;
     openAiUrl: string;
+    openAiModel: string;
 }
 
 export const defaultSettings: ISettingsOption = {
@@ -12,6 +13,7 @@ export const defaultSettings: ISettingsOption = {
     openAiKey: "noopenaikey",
     openAiUrl: "http://localhost:1337",
     pinned: false,
+    openAiModel: "gpt-3.5-turbo"
 } as const;
 export const settingKeys = Object.keys(defaultSettings);
 export const getSettings: () => Promise<ISettingsOption> = async () => {
