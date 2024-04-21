@@ -1,7 +1,7 @@
 import {describe, expect, test, vi} from "vitest";
-import {defaultSettings} from "../../shared/config";
 import pkg from "../../package.json";
 import path from "node:path";
+import {defaultSettings} from "../../shared/config";
 
 export async function openPopup() {
     const page = await browser.newPage();
@@ -9,34 +9,35 @@ export async function openPopup() {
     await page.content();
     /*保证标题相等*/
     expect(await page.title()).toEqual(pkg.name);
-    const button = await page.waitForSelector('button');
-    await button.click();
+    const button = await page.waitForSelector('button:nth-child(1)');
     await page.screenshot({path: path.resolve(snapshotDir, 'popup.png')});
+    await button.click({
+        button: "left"
+    });
 
     return {
         async save() {
+            expect(await (await (button.getProperty("textContent"))).jsonValue()).toEqual("Save");
             await button.click();
         },
-        async getStorage() {
-            return await page.evaluate(() => window.localStorage);
-        },
         async getLocalStorage() {
-            await page.evaluate(`async () => await chrome.storage.local.set(${JSON.stringify(defaultSettings)})`);
-            return await page.evaluate(`async () => await chrome.storage.local.get(["installData"])`);
+            await this.save();
+            return await page.evaluate(async () => {
+                const data = await chrome.storage.local.get(["installData", "settings"]);
+                return {
+                    ...data
+                };
+            });
         }
     };
 }
 
 describe("Popup 相关测试", async () => {
     const env = await browser.version();
-    const expected = '2023-12-22T15:27:25.950Z';
-    vi.setSystemTime(expected);
-
-    test(env + "store installed data", async () => {
+    /*应该把基本数据存储进去*/
+    test("store settings", async () => {
         const popup = await openPopup();
         await popup.save();
-        console.log(await popup.getLocalStorage());
-
-        expect(await popup.getLocalStorage());
+        expect((await popup.getLocalStorage()).settings).toEqual(defaultSettings);
     });
 });

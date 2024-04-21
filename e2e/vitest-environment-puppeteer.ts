@@ -1,6 +1,7 @@
 import type {Environment} from 'vitest';
 import puppeteer from 'puppeteer';
 import path from 'node:path';
+import * as process from "process";
 
 export default <Environment>{
     name: 'puppeteer',
@@ -29,7 +30,7 @@ export default <Environment>{
         // Assign any global variables that will be used in the tests
         global.browser = browser;
         global.extensionId = new URL(background.url()).hostname;
-        global.snapshotDir = path.resolve(__dirname,"../docs/snapshot")
+        global.snapshotDir = path.resolve(__dirname, "../docs/snapshot");
         return {
             teardown: () => {
                 browser.close();

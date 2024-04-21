@@ -20,9 +20,15 @@ export const defaultSettings: ISettingsOption = {
     theme: undefined,
     selectInputElementsText: false,
 } as const;
-export const settingsStorage = storage.defineItem<ISettingsOption>("local:settings", {
-    defaultValue: defaultSettings,
-});
+export const settingsStorage = (() => {
+    try {
+        return storage?.defineItem<ISettingsOption>("local:settings", {
+            defaultValue: defaultSettings,
+        });
+    } catch (e) {
+        return null;
+    }
+})()!;
 export const getSettings: () => Promise<ISettingsOption> = async () => {
     return {
         ...defaultSettings,
