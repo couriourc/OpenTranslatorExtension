@@ -8,7 +8,7 @@ export interface ISettingsOption {
     openAiUrl: string;
     openAiModel: string;
     theme: UseThemeProps['systemTheme'];
-    selectInputElementsText:boolean;
+    selectInputElementsText: boolean;
 }
 
 export const defaultSettings: ISettingsOption = {
@@ -20,20 +20,23 @@ export const defaultSettings: ISettingsOption = {
     theme: undefined,
     selectInputElementsText: false,
 } as const;
-export const settingKeys = Object.keys(defaultSettings);
+export const settingsStorage = storage.defineItem<ISettingsOption>("local:settings", {
+    defaultValue: defaultSettings,
+});
 export const getSettings: () => Promise<ISettingsOption> = async () => {
     return {
         ...defaultSettings,
-        ...((await browser.storage.local.get(settingKeys)) as ISettingsOption),
+        ...((await settingsStorage.getValue()) as ISettingsOption),
     };
 };
 
 
 export const saveSettings: (settings: Partial<ISettingsOption>) => Promise<ISettingsOption> =
     async (settings) => {
-        await browser.storage.local.set(settings);
-        return {
+        const savedSettings = {
             ...defaultSettings,
-            ...((await browser.storage.local.get(Object.keys(defaultSettings))) as ISettingsOption),
+            ...settings,
         };
+        await settingsStorage.setValue(savedSettings);
+        return savedSettings;
     };

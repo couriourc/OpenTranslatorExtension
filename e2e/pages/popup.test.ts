@@ -1,4 +1,4 @@
-import {beforeEach, describe, expect, test} from "vitest";
+import {describe, expect, test, vi} from "vitest";
 import {defaultSettings} from "../../shared/config";
 import pkg from "../../package.json";
 import path from "node:path";
@@ -29,9 +29,9 @@ export async function openPopup() {
 
 describe("Popup 相关测试", async () => {
     const env = await browser.version();
-    beforeEach(async () => {
+    const expected = '2023-12-22T15:27:25.950Z';
+    vi.setSystemTime(expected);
 
-    });
     test(env + "store installed data", async () => {
         const popup = await openPopup();
         await popup.save();

@@ -80,7 +80,8 @@
     "segmentit": "^2.0.3",
     "swr": "^2.2.5",
     "typewriter-effect": "^2.21.0",
-    "underscore": "^1.13.6"
+    "underscore": "^1.13.6",
+    "zod": "^3.22.5"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.2.2",

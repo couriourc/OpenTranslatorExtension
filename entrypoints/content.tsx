@@ -35,6 +35,7 @@ import {$t, getCaretNodeType, getClientX, getClientY, selectCursorWord, UserEven
 import $ from "jquery";
 import {
     IAllCHANELEventMessage,
+    listen_all_content_scripts_command, TContentScriptCommand,
     trigger_channel_event,
     trigger_wrapper_jquery_event,
     wrap_jquery_event
@@ -317,22 +318,22 @@ export default defineContentScript({
                 const $container = $(app_container.shadowHost);
                 let lastMouseEvent: UserEventType;
                 let mousedownTarget: EventTarget;
-                document.addEventListener("scroll", (event) => {
-                    console.log(event);
-                });
+//                document.addEventListener("scroll", (event) => {
+//                    console.log(event);
+//                });
 
-                browser.runtime.onMessage.addListener(function (request: IAllCHANELEventMessage) {
-                    if (request.type === 'open-translator') {
-                        if (window !== window.top) return;
-                        const text = request.selectionText ?? '';
-                        const x = lastMouseEvent ? getClientX(lastMouseEvent) : 0;
-                        const y = lastMouseEvent ? getClientY(lastMouseEvent) : 0;
-                        trigger_wrapper_jquery_event("show-popup", {
-                            getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
-                            selection: text,
-                        });
-                    }
-                });
+//                browser.runtime.onMessage.addListener(function (request: IAllCHANELEventMessage<TContentScriptCommand>) {
+//                    if (request.type === 'open-translator') {
+//                        if (window !== window.top) return;
+//                        const text = request.selectionText ?? '';
+//                        const x = lastMouseEvent ? getClientX(lastMouseEvent) : 0;
+//                        const y = lastMouseEvent ? getClientY(lastMouseEvent) : 0;
+//                        trigger_wrapper_jquery_event("show-popup", {
+//                            getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
+//                            selection: text,
+//                        });
+//                    }
+//                });
                 const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
                     const settings = await getSettings();
@@ -428,6 +429,7 @@ export default defineContentScript({
         MessagePool.set(port);
         GPTEngine.set(new OpenAIEngine().use_bypass());
 
+        listen_all_content_scripts_command();
         app_container.mount();
     },
 

@@ -7,6 +7,9 @@ import {Provider as JotaiProvider} from 'jotai';
 import {appStore, getSettingStore} from "@/shared/store";
 import {MantineProvider} from "@mantine/core";
 import {WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
+import 'uno.css';
+import '@/assets/styles/style.less';
+
 
 export function TranslatorAppWrapper({children}: { children: ReactNode }): ReactNode {
     const store = getSettingStore();

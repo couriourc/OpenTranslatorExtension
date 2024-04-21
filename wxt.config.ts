@@ -17,7 +17,7 @@ export default defineConfig({
         name: '__MSG_extName__',
         description: '__MSG_extDescription__',
         default_locale: 'en',
-        permissions: ['storage', "contextMenus", 'webRequest'],
+        permissions: ['storage', "contextMenus", 'webRequest', "sidePanel"],
         commands: {
             'open-option': {
                 suggested_key: {
@@ -26,6 +26,9 @@ export default defineConfig({
                 },
                 description: 'Open the option',
             },
+        },
+        action: {
+            "default_title": "Click to open sidebar"
         }
     },
     vite: () => ({
