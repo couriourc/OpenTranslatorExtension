@@ -34,8 +34,7 @@ import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Sin
 import {$t, getCaretNodeType, getClientX, getClientY, selectCursorWord, UserEventType} from "@/shared/utils.ts";
 import $ from "jquery";
 import {
-    IAllCHANELEventMessage,
-    listen_all_content_scripts_command, TContentScriptCommand,
+    listen_all_content_scripts_command,
     trigger_channel_event,
     trigger_wrapper_jquery_event,
     wrap_jquery_event
@@ -73,7 +72,7 @@ function EnginePanel({selection}: { selection: string }) {
     const [is_loaded, setIsLoaded] = useState(false);
 
     return <Card
-        className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto')}
+        className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto overflow-visible!')}
         ref={element => {
             //@ts-ignore
             ref.current = element!;
@@ -237,20 +236,18 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const listen = (e: any) => {
-            const postion = (e)?.getBoundingClientRect();
             $(ref.current as HTMLElement).css({
                 position: "absolute",
-                zIndex: zIndex,
-                minWidth: popupCardMinWidth + "px",
-                maxWidth: popupCardMaxWidth + "px",
-                minHeight: popupCardMinWidth + "px",
                 padding: "1em",
                 boxSizing: "border-box",
-                overflowX: 'hidden',
-                overflowY: 'auto',
+                overflow: 'visible',
                 top: 0 + "px",
                 left: 0 + "px",
-                pointerEvents: 'none'
+                pointerEvents: 'none',
+                minHeight: (panel.isOpen ? popupCardMinWidth : 0) + "px",
+                minWidth: popupCardMinWidth + "px",
+                maxWidth: popupCardMaxWidth + "px",
+                zIndex: zIndex,
             });
         };
         const listen_hide_popup = () => {
@@ -264,7 +261,6 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
         ];
         return () => events.forEach(fn => fn.unlisten());
     });
-
 
     return <div
         ref={r => {
@@ -302,6 +298,11 @@ function getElementByXpath(path: string, parent = document) {
 }
 
 let is_showed_popup = false;
+const position = {
+    x: 0,
+    y: 0,
+    offset: 0,
+};
 export default defineContentScript({
     matches: ['<all_urls>'],
     runAt: "document_end",
@@ -318,22 +319,15 @@ export default defineContentScript({
                 const $container = $(app_container.shadowHost);
                 let lastMouseEvent: UserEventType;
                 let mousedownTarget: EventTarget;
-//                document.addEventListener("scroll", (event) => {
-//                    console.log(event);
-//                });
+                window.addEventListener("scroll", (event) => {
+                    console.log(-window.scrollY + position.offset);
+                    $container.css({
+                        transform: `translateY(${-window.scrollY + position.offset}px)`,
+                        top: position.y + "px",
+                        marginLeft: position.x + "px",
+                    });
+                });
 
-//                browser.runtime.onMessage.addListener(function (request: IAllCHANELEventMessage<TContentScriptCommand>) {
-//                    if (request.type === 'open-translator') {
-//                        if (window !== window.top) return;
-//                        const text = request.selectionText ?? '';
-//                        const x = lastMouseEvent ? getClientX(lastMouseEvent) : 0;
-//                        const y = lastMouseEvent ? getClientY(lastMouseEvent) : 0;
-//                        trigger_wrapper_jquery_event("show-popup", {
-//                            getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
-//                            selection: text,
-//                        });
-//                    }
-//                });
                 const mouseUpHandler = async (event: UserEventType) => {
                     lastMouseEvent = event;
                     const settings = await getSettings();
@@ -375,10 +369,16 @@ export default defineContentScript({
                             const y = getClientY(event);
                             $ui.show();
                             selection = text;
+                            position.x = x;
+                            position.y = y;
+                            position.offset = window.scrollY;
                             $container.css({
                                 top: y + "px",
-                                left: x + "px",
-                                position: "fixed"
+                                left: 0,
+                                marginLeft: x + "px",
+                                position: "fixed",
+                                transform: `translateY(0)`,
+                                zIndex: zIndex,
                             });
                             trigger_wrapper_jquery_event("show-popup", {
                                 getBoundingClientRect: () => new DOMRect(x, y, popupCardOffset, popupCardOffset),
