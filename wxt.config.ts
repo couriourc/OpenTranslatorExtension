@@ -4,8 +4,9 @@ import Unocss from "unocss/vite";
 import tailwindcss from "tailwindcss";
 import postcssPresetMantine from "postcss-preset-mantine";
 import postcssSimpleVars from "postcss-simple-vars";
-import {replaceCodePlugin} from "vite-plugin-replace";
+//import {replaceCodePlugin} from "vite-plugin-replace";
 import pkg from "./package.json";
+import replace from "vite-plugin-filter-replace";
 // vite.config.js
 // See https://wxt.dev/api/config.html
 export default defineConfig({
@@ -31,14 +32,17 @@ export default defineConfig({
         plugins: [
             react(),
             Unocss({}),
-            replaceCodePlugin({
-                replacements: [
-                    {
-                        from: "<% VITE_APP_TITLE />",
-                        to: pkg.name
-                    }
-                ]
-            }),
+            replace([
+                {
+                    filter: /\.html$/,
+                    replace: [
+                        {
+                            from: /<%\s*VITE_APP_TITLE\s*\/>/,
+                            to: pkg.name
+                        }
+                    ]
+                }
+            ]),
         ],
 
         css: {

@@ -8,6 +8,7 @@ import {settingStore} from "@/shared/store";
 import {useImmerAtom} from "jotai-immer";
 import {ISettingsOption, saveSettings} from "@/shared/config.ts";
 
+
 function App() {
     const [isVisible, setIsVisible] = useState(false);
     const toggleVisibility = () => setIsVisible(isVisible => !isVisible);
@@ -26,7 +27,7 @@ function App() {
             <TitleBarHeader></TitleBarHeader>
             {/* 配置 OpenaiKey */}
             <Divider></Divider>
-            <div className="flex w-full flex-wrap md:flex-nowrap mb-6 md:mb-0 gap-6px pt-12px  px-6px box-border">
+            <div className="flex w-full flex-col mb-6 md:mb-0 gap-6px pt-12px  px-6px box-border">
 
                 <Input size={"sm"}
                        type="text"

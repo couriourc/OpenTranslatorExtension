@@ -26,5 +26,5 @@ docker run -d -p 8080:8080 -p 1337:1337 -p 7900:7900 --shm-size="2g" -v ${PWD}/h
 
 ## :camera_flash: 快照
 
-![img.png](docs/img.png)
+![img.png](docs/snapshot/popup.png)
 ![panel.png](docs/panel.png)
