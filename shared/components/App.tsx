@@ -14,20 +14,20 @@ import '@/assets/styles/style.less';
 export function TranslatorAppWrapper({children}: { children: ReactNode }): ReactNode {
     const store = getSettingStore();
     return <React.StrictMode>
-        <JotaiProvider store={appStore}>
-            <NextUIProvider>
-                <MantineProvider getRootElement={() => WrapperHelper.get()?.dom! as HTMLElement ?? document.body}
-                                 defaultColorScheme={store.theme}
-                >
-                    <NextThemesProvider
-                        attribute="class"
-                        defaultTheme={store.theme}
+            <JotaiProvider store={appStore}>
+                <NextUIProvider>
+                    <MantineProvider getRootElement={() => WrapperHelper.get()?.dom! as HTMLElement ?? document.body}
+                                     defaultColorScheme={store.theme}
                     >
-                        {children}
-                        <Toaster/>
-                    </NextThemesProvider>
-                </MantineProvider>
-            </NextUIProvider>
-        </JotaiProvider>
+                        <NextThemesProvider
+                            attribute="class"
+                            defaultTheme={store.theme}
+                        >
+                            {children}
+                            <Toaster/>
+                        </NextThemesProvider>
+                    </MantineProvider>
+                </NextUIProvider>
+            </JotaiProvider>
     </React.StrictMode>;
 }

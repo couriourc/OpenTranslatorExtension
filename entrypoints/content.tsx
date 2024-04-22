@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
@@ -13,9 +13,9 @@ import {
     Divider,
     ScrollShadow,
     Select,
-    SelectItem
+    SelectItem,
 } from "@nextui-org/react";
-
+import {Mark, Menu} from "@mantine/core";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {
@@ -47,10 +47,120 @@ import {getSettings} from "@/shared/config.ts";
 import {CiSettings} from "react-icons/ci";
 import {Markdown} from "@/shared/components/Markdown.tsx";
 import {LoadingCoffee} from "@/shared/components/Animation.tsx";
+import Highlighter from "react-highlight-words";
+import {segment} from "@/shared/lang/segment.ts";
+import useSWR from "swr";
+import {SiTrueup} from "react-icons/si";
 
 let $ui: JQuery;
+let $mount: Element|null;
 let selection: string;
 
+function Preview() {
+    const [message, syncMessage] = useState<string>(``);
+    const gpt = GPTEngine.get();
+    useEffect(() => {
+        return gpt.on_message((msg: any) => {
+            syncMessage((m) => m + msg.content);
+        });
+    }, []);
+
+    return <>
+        {
+            Assert(!!!message,
+                <Markdown>{message}</Markdown>,
+                <LoadingCoffee/>
+            )
+        }
+    </>;
+}
+
+interface IOriginProps {
+    className: undefined | string;
+
+}
+
+function Origin({className, ...props}: IOriginProps) {
+    const {data} = useSWR('/segment', async () => {
+        const data = await segment(selection)!;
+        return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
+    });
+
+    interface IWordInfo {
+        isKeyword: boolean;
+        isMemo: boolean;
+    }
+
+    const words: Map<string, IWordInfo> = new Map();
+    const [curSelected, setCurSelected] = useState<IWordInfo>({
+        isKeyword: false,
+        isMemo: false,
+    });
+
+    function handleClick(text: string, highlightIndex: number) {
+        console.log(text, highlightIndex);
+    }
+
+    function handleOneWordPick(key: keyof IWordInfo) {
+        console.log(key);
+        setCurSelected((state) => {
+            return {
+                ...state,
+                [key]: !state[key]
+            };
+        });
+    }
+
+    const handleInput: React.KeyboardEventHandler<HTMLElement> = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    };
+
+    const selectedValues = useMemo(
+        () => Object.keys(curSelected ?? {}).filter(key => curSelected[key as keyof IWordInfo]),
+        [
+            curSelected
+        ]);
+    return <div
+        {...props}
+    >
+        <Highlighter
+            highlightClassName={cx("hover:text-blue cursor-pointer hover:bg-yellow rouned-lg bg-transparent px-2px")}
+            searchWords={data?.map(word => word.segment) ?? []}
+            autoEscape={true}
+            textToHighlight={selection}
+            highlightTag={({children, highlightIndex, ...props}) =>
+                <Menu withinPortal={false}
+                      closeOnClickOutside={true}
+                      closeOnItemClick={false}
+                      shadow="md"
+                      width={200}
+                >
+                    <Menu.Target>
+                        <Mark onKeyDownCapture={handleInput}>
+                            {children}
+                        </Mark>
+                    </Menu.Target>
+
+                    <Menu.Dropdown>
+                        <Menu.Item rightSection={Assert(curSelected.isKeyword, <SiTrueup/>)}
+                                   onClick={(e) => {
+                                       handleOneWordPick("isKeyword");
+                                   }}>
+                            专有名词
+                        </Menu.Item>
+                        <Menu.Item rightSection={Assert(curSelected.isMemo, <SiTrueup/>)}
+                                   onClick={(e) => {
+                                       handleOneWordPick("isMemo");
+                                   }}>
+                            备忘录
+                        </Menu.Item>
+                    </Menu.Dropdown>
+                </Menu>
+            }
+        />
+    </div>;
+}
 
 function EnginePanel({selection}: { selection: string }) {
 
@@ -60,22 +170,21 @@ function EnginePanel({selection}: { selection: string }) {
         controls.start(event);
     }
 
-    const [message, syncMessage] = useState<string>(``);
-    const gpt = GPTEngine.get();
-    useEffect(() => {
-        setIsLoaded(true);
-        return gpt.on_message((msg: any) => {
-            syncMessage((m) => m + msg.content);
-        });
-    }, []);
     const ref = useRef<HTMLDivElement>(null);
     const [is_loaded, setIsLoaded] = useState(false);
 
+    useLayoutEffect(() => {
+        setIsLoaded(true);
+        return () => {
+            $mount = null;
+        };
+    }, []);
     return <Card
         className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto overflow-visible!')}
         ref={element => {
             //@ts-ignore
             ref.current = element!;
+            $mount = element!;
         }}
         isFooterBlurred
     >
@@ -102,13 +211,9 @@ function EnginePanel({selection}: { selection: string }) {
 
                 <Divider></Divider>
                 <CardBody>
-                    <ScrollShadow hideScrollBar className="max-h-40vh">
-                        {
-                            Assert(!!message,
-                                <Markdown>{message}</Markdown>,
-                                <LoadingCoffee/>
-                            )
-                        }
+                    <ScrollShadow hideScrollBar className="min-h-200px overflow-visible max-h-40vh">
+                        <Origin className={cx("h-full")}></Origin>
+                        <Preview></Preview>
                     </ScrollShadow>
                     <div className={"flex items-center"}>
 

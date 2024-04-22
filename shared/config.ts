@@ -9,6 +9,7 @@ export interface ISettingsOption {
     openAiModel: string;
     theme: UseThemeProps['systemTheme'];
     selectInputElementsText: boolean;
+    cacheLastOpenedOptions: boolean;
 }
 
 export const defaultSettings: ISettingsOption = {
@@ -19,6 +20,7 @@ export const defaultSettings: ISettingsOption = {
     openAiModel: "gpt-3.5-turbo",
     theme: undefined,
     selectInputElementsText: false,
+    cacheLastOpenedOptions: false,
 } as const;
 export const settingsStorage = (() => {
     try {

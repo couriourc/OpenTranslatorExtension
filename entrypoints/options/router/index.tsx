@@ -1,42 +1,57 @@
-import {
-    createBrowserRouter,
-    createRoutesFromElements,
-    Route,
-    RouterProvider, Routes, RoutesProps,
-} from "react-router-dom";
-import {motion} from "framer-motion";
-import {lazy} from "react";
+//
+//export const routes = [
+//    {
+//        path: "/",
+//
+//        component: Home,
+//    },
+//    {
+//        path: "/settings",
+//        component: GeneralSettings
+//    }
+//];
+//export const router = createBrowserRouter(
+//    createRoutesFromElements(
+//    )
+//    , {
+//        basename: "/options.html"
+//    });
+
+import React, {FC, NamedExoticComponent, ReactNode, Suspense} from "react";
 import {Home} from "@/entrypoints/options/pages/Home.tsx";
 import {GeneralSettings} from "@/entrypoints/options/pages/GeneralSettings.tsx";
+import {IoMusicalNote, IoSettings} from "react-icons/io5";
 
-const routes = [
+export const RoutesMap = Object.seal({
+    'Home': Home,
+    'GeneralSettings': GeneralSettings,
+} as const);
+
+export const Sidebars: (IRouterView & {
+    title: NamedExoticComponent<any> | ReactNode;
+    tap?: () => {}
+})[] = [
     {
-        path: "/",
-        component: Home,
+        title: <><IoMusicalNote/>单词主页</>,
+        path: "Home"
     },
     {
-        path: "/settings",
-        component: GeneralSettings
+        title: <><IoSettings/>通用设置</>,
+        path: "GeneralSettings"
     }
 ];
-export const router = createBrowserRouter(
-    createRoutesFromElements(
-        <>{
-            routes.map(({
-                            path,
-                            component: Component
-                        }) => {
-                return <Route key={path} path={"/"} element={
-                    <motion.div animate={{
-                        opacity: 1,
-                    }}>
-                        <Component></Component>
-                    </motion.div>
-                }></Route>;
+export type TRoutes = keyof typeof RoutesMap;
 
-            })
-        }</>
-    )
-    , {
-        basename: "/options.html"
-    });
+interface IRouterView {
+    path: TRoutes;
+
+    [k: string]: any;
+}
+
+export function RouterView({path, ...props}: IRouterView) {
+    const Component = RoutesMap[path] as FC<any>;
+    if (!Component) return null;
+    return <Suspense fallback={<></>}>
+        <Component {...props}/>
+    </Suspense>;
+}
