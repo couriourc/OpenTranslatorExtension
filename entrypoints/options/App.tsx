@@ -1,12 +1,15 @@
-import React, {Suspense} from "react";
-import {Card, CardBody, CardHeader, Radio, RadioGroup, Skeleton} from "@nextui-org/react";
+import React, {Suspense, useState} from "react";
+import {Avatar, Card, CardBody, CardHeader, Skeleton} from "@nextui-org/react";
 import {LangCode, supportedLanguages} from "@/shared/lang";
-import {useTheme} from "@/shared/hooks/useTheme.ts";
-import {useSettingStore} from "@/shared/store";
-import {LogoWithName} from "@/shared/components/Logo.tsx";
-import {saveSettings} from "@/shared/config.ts";
-import {UseThemeProps} from "next-themes/dist/types";
-import {$t} from "@/shared/utils.ts";
+import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
+import {css, cx} from "@emotion/css";
+import {AppShell, Burger} from '@mantine/core';
+import {useDisclosure} from '@mantine/hooks';
+import {List, rem} from '@mantine/core';
+import {IoMusicalNote, IoSettings} from "react-icons/io5";
+import {router} from "@/entrypoints/options/router";
+import {RouterProvider,} from "react-router-dom";
+import {noop} from "underscore";
 
 interface ILanguageSelectorProps {
     value?: string;
@@ -31,37 +34,98 @@ const langOptions: LangOption = supportedLanguages.reduce((acc, [id, label]) => 
     label: string,
 })[]);
 
-function LanguageSelector({value, onChange, onBlur}: ILanguageSelectorProps) {
-    const {themes,theme, setTheme} = useTheme();
-    console.log(useSettingStore());
+function LanguageSelector({}: ILanguageSelectorProps) {
+    const [opened, {toggle}] = useDisclosure();
+    const [curActive, setCurActive] = useState<string>();
     return (
         <Card className={"w-full h-100vh"}>
-            <CardHeader className="flex  z-0 top-1 flex-col !items-start">
-                <LogoWithName></LogoWithName>
+            <CardHeader className={cx("flex  z-0 top-1 !items-center justify-center")}>
+
             </CardHeader>
             <CardBody className={"z-10  "}>
-                <RadioGroup
-                    label={$t("SelectYourFavoriteTheme")}
-                    orientation="horizontal"
-                    value={theme}
-                    onChange={async (event) => {
-                        const value = event.target.value! as UseThemeProps['systemTheme'];
-                        await saveSettings({
-                            theme: value,
-                        });
-                        //@ts-ignore
-                        setTheme(value);
+
+                <AppShell
+                    header={{height: 48}}
+                    navbar={{
+                        width: 300,
+                        breakpoint: 'sm',
+                        collapsed: {mobile: !opened},
                     }}
+                    padding="md"
                 >
-                    {
-                        themes.map(theme => {
-                            return <Radio
-                                value={theme}
-                                key={theme}
-                                className={"cursor-pointer"}>{theme}</Radio>;
-                        })
-                    }
-                </RadioGroup>
+                    <AppShell.Header className={"flex items-center justify-between"}>
+                        <div className={"flex items-center"}>
+                            <Burger
+                                opened={opened}
+                                onClick={toggle}
+                                hiddenFrom="sm"
+                                size="sm"
+                            />
+                            <div>
+                                <LogoWithName></LogoWithName>
+                            </div>
+                        </div>
+                        <div className={"px-12px"}>
+                            <Avatar size={"sm"}
+                                    isBordered
+                                    icon={<Logo/>}
+                            />
+                        </div>
+                    </AppShell.Header>
+
+                    <AppShell.Navbar p="md">
+                        <List
+                            spacing="xs"
+                            size="sm"
+                            center
+                        >
+                            {
+                                [
+                                    {
+                                        path: "/",
+                                        title: <><IoMusicalNote style={{width: rem(16), height: rem(16)}}/>单词本</>,
+                                        onClick: () => {
+                                        }
+                                    },
+                                    {
+                                        path: "/settings",
+                                        title: <><IoSettings style={{width: rem(16), height: rem(16)}}/>通用设置</>,
+                                        onClick: () => {
+                                        }
+                                    }
+                                ].map(({title, onClick, path}) => {
+                                    const tap = onClick ?? noop;
+                                    return <List.Item key={path}>
+                                        <div
+                                            onClick={() => {
+                                                setCurActive(path);
+                                                tap();
+                                            }}
+                                            className={
+                                                cx("flex cursor-pointer border-solid w-full h-24px items-center hover:text-blue duration-200",
+                                                    css`
+                                                        &.active {
+
+                                                        }
+                                                    `,
+                                                    {
+                                                        "text-blue": curActive === path
+                                                    },
+                                                )
+                                            }
+                                        >
+                                            {title}
+                                        </div>
+                                    </List.Item>;
+                                })
+                            }
+                            <List.Item></List.Item>
+                        </List>
+                    </AppShell.Navbar>
+                    <AppShell.Main>
+                        <RouterProvider router={router}/>
+                    </AppShell.Main>
+                </AppShell>
                 <div className={"flex gap-1"}>
                 </div>
             </CardBody>

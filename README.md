@@ -29,4 +29,5 @@ docker run -d -p 8080:8080 -p 1337:1337 -p 7900:7900 --shm-size="2g" -v ${PWD}/h
 ![弹出配置页面](docs/snapshot/popup.png)
 ![划词选中](docs/snapshot/thumb.png)
 ![翻译中](docs/snapshot/translating.png)
+![配置页面以及主页部分](docs/snapshot/options.png)
 
