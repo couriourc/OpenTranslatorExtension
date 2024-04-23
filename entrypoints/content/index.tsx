@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import React, {ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
@@ -15,7 +15,7 @@ import {
     Select,
     SelectItem,
 } from "@nextui-org/react";
-import {Mark, Menu, Text} from "@mantine/core";
+import {Mark, Menu,} from "@mantine/core";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {
@@ -51,9 +51,9 @@ import Highlighter from "react-highlight-words";
 import {segment} from "@/shared/lang/segment.ts";
 import useSWR from "swr";
 import {SiTrueup} from "react-icons/si";
+import {notify} from "@/shared/notifications";
 
 let $ui: JQuery;
-let $mount: Element | null;
 let selection: string;
 
 function Preview() {
@@ -81,8 +81,6 @@ interface IOriginProps {
 
 }
 
-import {db} from "@/shared/store/db";
-
 function HighlighterMarker({
                                children,
                                highlightIndex,
@@ -100,8 +98,10 @@ function HighlighterMarker({
     });
 
     const handleInput: React.KeyboardEventHandler<HTMLElement> = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+        }
     };
 
     const selectedValues = useMemo(
@@ -111,13 +111,23 @@ function HighlighterMarker({
         ]);
 
     function handleOneWordPick(key: keyof IWordInfo) {
-        console.log(key);
+        notify();
         setCurSelected((state) => {
             return {
                 ...state,
                 [key]: !state[key]
             };
         });
+    }
+
+    const [editing, enterEditing] = useState<boolean>();
+
+    function handleEnterEditorMode() {
+        enterEditing(true);
+    }
+
+    function handleLeveEditorMode() {
+        enterEditing(false);
     }
 
     return <Menu withinPortal={false}
@@ -127,9 +137,15 @@ function HighlighterMarker({
                  width={200}
     >
         <Menu.Target>
-            <Mark className={cx("cursor-pointer", className)} onKeyDownCapture={handleInput}>
-                {children}
-            </Mark>
+            <Mark
+                contentEditable={editing ? "true" : "false"}
+                spellCheck={false}
+                onDoubleClick={handleEnterEditorMode}
+                onBlurCapture={handleLeveEditorMode}
+                className={cx("cursor-pointer", className)}
+                onKeyDownCapture={handleInput}
+                dangerouslySetInnerHTML={{__html: children as string}}
+            />
         </Menu.Target>
 
         <Menu.Dropdown>
@@ -177,6 +193,7 @@ function Origin({className, ...props}: IOriginProps) {
 
     return <div
         {...props}
+        className={cx(className, "border-box ")}
     >
         <Highlighter
             highlightClassName={cx("cursor-pointer hover:bg-yellow rounded-lg bg-transparent px-2px")}
@@ -201,18 +218,11 @@ function EnginePanel({selection}: { selection: string }) {
     const ref = useRef<HTMLDivElement>(null);
     const [is_loaded, setIsLoaded] = useState(false);
 
-    useLayoutEffect(() => {
-        setIsLoaded(true);
-        return () => {
-            $mount = null;
-        };
-    }, []);
     return <Card
         className={cx('w-full h-full min-h-300px w-99% m-auto pointer-events-auto overflow-visible!')}
         ref={element => {
             //@ts-ignore
             ref.current = element!;
-            $mount = element!;
         }}
         isFooterBlurred
     >
@@ -363,24 +373,18 @@ function PanelHeader() {
     </div>;
 }
 
-function ContentApp({wrapper}: { wrapper: HTMLElement }) {
+function ContentApp() {
     const [panel, setPanel] = usePanelStore();
     const [selection, set_selection] = useState<string>("");
     const ref = useRef<HTMLDivElement>(null);
     useEffect(() => {
         const listen = (e: any) => {
             $(ref.current as HTMLElement).css({
-                position: "absolute",
-                padding: "1em",
-                boxSizing: "border-box",
-                overflow: 'visible',
-                top: 0 + "px",
-                left: 0 + "px",
-                pointerEvents: 'none',
+
                 minHeight: (panel.isOpen ? popupCardMinWidth : 0) + "px",
                 minWidth: popupCardMinWidth + "px",
                 maxWidth: popupCardMaxWidth + "px",
-                zIndex: zIndex,
+                zIndex: 1,
             });
         };
         const listen_hide_popup = () => {
@@ -400,6 +404,9 @@ function ContentApp({wrapper}: { wrapper: HTMLElement }) {
             //@ts-ignore
             ref.current = r!;
         }}
+        className={
+            cx("absolute p-1em border-box overflow-visible pointer-events-none top-0 left-0")
+        }
     >
         {
             Assert(!panel.isOpen as boolean, <PanelHeader/>, <EnginePanel selection={selection}></EnginePanel>)
@@ -440,6 +447,7 @@ export default defineContentScript({
     matches: ['<all_urls>'],
     runAt: "document_end",
     cssInjectionMode: "ui",
+    world: "ISOLATED",
     async main(e) {
         const settings = await getSettings();
         const app_container = await createShadowRootUi(e, {
@@ -447,18 +455,29 @@ export default defineContentScript({
             position: "overlay",
             append: "after",
             async onMount(wrapper: HTMLElement) {
+                const div = document.createElement("div");
+
+                div.style.pointerEvents = "auto";
                 $ui = $(wrapper);
+
+                wrapper.append(div);
+
 
                 const $container = $(app_container.shadowHost);
                 let lastMouseEvent: UserEventType;
                 let mousedownTarget: EventTarget;
+                $container.css({
+                    position: "fixed",
+                    zIndex: zIndex,
+                });
                 window.addEventListener("scroll", (event) => {
                     console.log(-window.scrollY + position.offset);
-                    $container.css({
+                    $(div).css({
                         transform: `translateY(${-window.scrollY + position.offset}px)`,
                         top: position.y + "px",
                         marginLeft: position.x + "px",
                     });
+
                 });
 
                 const mouseUpHandler = async (event: UserEventType) => {
@@ -467,7 +486,7 @@ export default defineContentScript({
 
                     if (
                         (mousedownTarget instanceof HTMLInputElement || mousedownTarget instanceof HTMLTextAreaElement)
-                        && settings.selectInputElementsText === false
+                        && !settings.selectInputElementsText
                     ) {
                         return;
                     }
@@ -505,7 +524,7 @@ export default defineContentScript({
                             position.x = x;
                             position.y = y;
                             position.offset = window.scrollY;
-                            $container.css({
+                            $(div).css({
                                 top: y + "px",
                                 left: 0,
                                 marginLeft: x + "px",
@@ -542,13 +561,10 @@ export default defineContentScript({
                     .then(({$ui}) => {
                         $ui.hide();
                     });
-                const div = document.createElement("div");
-                wrapper.append(div);
-                div.style.pointerEvents = "auto";
                 ReactDOM.createRoot(div).render(
-                    <TranslatorAppWrapper>
+                    <TranslatorAppWrapper wrapper={div}>
                         <DndProvider backend={HTML5Backend}>
-                            <ContentApp wrapper={wrapper}/>
+                            <ContentApp/>
                         </DndProvider>
                     </TranslatorAppWrapper>,
                 );
