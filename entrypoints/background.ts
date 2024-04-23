@@ -11,6 +11,7 @@ import {GPTEngine, MessagePool} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
 import {$t} from "@/shared/utils.ts";
+import {db} from "@/shared/store/db.ts";
 
 type Port = ReturnType<typeof browser.runtime.connect>
 
@@ -99,5 +100,7 @@ export default defineBackground(async () => {
             storage.setItem("local:installData", Date.now());
         }
     });
+    // 将数据先集中处理，后续可以分布式
+
     listen_all_background_command();
 });

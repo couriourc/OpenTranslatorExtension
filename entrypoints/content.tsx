@@ -1,4 +1,4 @@
-import React, {useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
+import React, {ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
@@ -81,36 +81,23 @@ interface IOriginProps {
 
 }
 
-function Origin({className, ...props}: IOriginProps) {
-    const {data} = useSWR(() => '/segment?selection=' + selection, async () => {
-        const data = await segment(selection)!;
-        return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
-    });
+import {db} from "@/shared/store/db";
 
-    interface IWordInfo {
-        isKeyword: boolean;
-        isMemo: boolean;
-    }
-
+function HighlighterMarker({
+                               children,
+                               highlightIndex,
+                               className,
+                               ...props
+                           }: {
+    children: ReactNode,
+    highlightIndex: number,
+    className: string,
+}) {
     const words: Map<string, IWordInfo> = new Map();
     const [curSelected, setCurSelected] = useState<IWordInfo>({
         isKeyword: false,
         isMemo: false,
     });
-
-    function handleClick(text: string, highlightIndex: number) {
-        console.log(text, highlightIndex);
-    }
-
-    function handleOneWordPick(key: keyof IWordInfo) {
-        console.log(key);
-        setCurSelected((state) => {
-            return {
-                ...state,
-                [key]: !state[key]
-            };
-        });
-    }
 
     const handleInput: React.KeyboardEventHandler<HTMLElement> = (e) => {
         e.preventDefault();
@@ -122,51 +109,82 @@ function Origin({className, ...props}: IOriginProps) {
         [
             curSelected
         ]);
+
+    function handleOneWordPick(key: keyof IWordInfo) {
+        console.log(key);
+        setCurSelected((state) => {
+            return {
+                ...state,
+                [key]: !state[key]
+            };
+        });
+    }
+
+    return <Menu withinPortal={false}
+                 closeOnClickOutside={true}
+                 closeOnItemClick={false}
+                 shadow="md"
+                 width={200}
+    >
+        <Menu.Target>
+            <Mark className={cx("cursor-pointer", className)} onKeyDownCapture={handleInput}>
+                {children}
+            </Mark>
+        </Menu.Target>
+
+        <Menu.Dropdown>
+            {/**@todo 优化点击后自动关闭的 BUG*/}
+            <Menu.Item rightSection={
+                <SiTrueup className={cx({
+                    'hidden': curSelected.isKeyword
+                })}/>
+            } onClick={(e) => {
+                handleOneWordPick("isKeyword");
+            }}>
+                专有名词
+            </Menu.Item>
+            <Menu.Item rightSection={
+                <SiTrueup
+                    className={cx({
+                        'hidden': curSelected.isMemo
+                    })}
+                />
+            } onClick={(e) => {
+                handleOneWordPick("isMemo");
+            }}>
+                备忘录
+            </Menu.Item>
+        </Menu.Dropdown>
+    </Menu>;
+}
+
+interface IWordInfo {
+    isKeyword: boolean;
+    isMemo: boolean;
+}
+
+function Origin({className, ...props}: IOriginProps) {
+    const {data} = useSWR(() => '/segment?selection=' + selection, async () => {
+//        console.log(await db.system.get("version"));
+//        await db.system.add({
+//            "version": 1,
+//        });
+//        console.log(await db.system.count());
+
+        const data = await segment(selection)!;
+        return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
+    });
+
     return <div
         {...props}
     >
         <Highlighter
-            highlightClassName={cx("hover:text-blue cursor-pointer hover:bg-yellow rouned-lg bg-transparent px-2px")}
+            highlightClassName={cx("cursor-pointer hover:bg-yellow rounded-lg bg-transparent px-2px")}
             searchWords={data?.map(word => word.segment) ?? []}
             autoEscape={true}
             textToHighlight={selection}
-            highlightTag={({children, highlightIndex, ...props}) =>
-                <Menu withinPortal={false}
-                      closeOnClickOutside={true}
-                      closeOnItemClick={false}
-                      shadow="md"
-                      width={200}
-                >
-                    <Menu.Target>
-                        <Mark onKeyDownCapture={handleInput}>
-                            {children}
-                        </Mark>
-                    </Menu.Target>
-
-                    <Menu.Dropdown>
-                        {/**@todo 优化点击后自动关闭的 BUG*/}
-                        <Menu.Item rightSection={
-                            <SiTrueup className={cx({
-                                'hidden': curSelected.isKeyword
-                            })}/>
-                        } onClick={(e) => {
-                            handleOneWordPick("isKeyword");
-                        }}>
-                            专有名词
-                        </Menu.Item>
-                        <Menu.Item rightSection={
-                            <SiTrueup
-                                className={cx({
-                                    'hidden': curSelected.isMemo
-                                })}
-                            />
-                        } onClick={(e) => {
-                            handleOneWordPick("isMemo");
-                        }}>
-                            备忘录
-                        </Menu.Item>
-                    </Menu.Dropdown>
-                </Menu>
+            highlightTag={({children, highlightIndex, className, ...props}) =>
+                <HighlighterMarker {...{highlightIndex, className, ...props}}>{children}</HighlighterMarker>
             }
         />
     </div>;
