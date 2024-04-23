@@ -15,7 +15,7 @@ import {
     Select,
     SelectItem,
 } from "@nextui-org/react";
-import {Mark, Menu} from "@mantine/core";
+import {Mark, Menu, Text} from "@mantine/core";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {
@@ -53,7 +53,7 @@ import useSWR from "swr";
 import {SiTrueup} from "react-icons/si";
 
 let $ui: JQuery;
-let $mount: Element|null;
+let $mount: Element | null;
 let selection: string;
 
 function Preview() {
@@ -67,6 +67,7 @@ function Preview() {
 
     return <>
         {
+            /**@todo: 处理预览部分的信息*/
             Assert(!!!message,
                 <Markdown>{message}</Markdown>,
                 <LoadingCoffee/>
@@ -81,7 +82,7 @@ interface IOriginProps {
 }
 
 function Origin({className, ...props}: IOriginProps) {
-    const {data} = useSWR('/segment', async () => {
+    const {data} = useSWR(() => '/segment?selection=' + selection, async () => {
         const data = await segment(selection)!;
         return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
     });
@@ -143,16 +144,25 @@ function Origin({className, ...props}: IOriginProps) {
                     </Menu.Target>
 
                     <Menu.Dropdown>
-                        <Menu.Item rightSection={Assert(curSelected.isKeyword, <SiTrueup/>)}
-                                   onClick={(e) => {
-                                       handleOneWordPick("isKeyword");
-                                   }}>
+                        {/**@todo 优化点击后自动关闭的 BUG*/}
+                        <Menu.Item rightSection={
+                            <SiTrueup className={cx({
+                                'hidden': curSelected.isKeyword
+                            })}/>
+                        } onClick={(e) => {
+                            handleOneWordPick("isKeyword");
+                        }}>
                             专有名词
                         </Menu.Item>
-                        <Menu.Item rightSection={Assert(curSelected.isMemo, <SiTrueup/>)}
-                                   onClick={(e) => {
-                                       handleOneWordPick("isMemo");
-                                   }}>
+                        <Menu.Item rightSection={
+                            <SiTrueup
+                                className={cx({
+                                    'hidden': curSelected.isMemo
+                                })}
+                            />
+                        } onClick={(e) => {
+                            handleOneWordPick("isMemo");
+                        }}>
                             备忘录
                         </Menu.Item>
                     </Menu.Dropdown>
