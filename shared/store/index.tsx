@@ -1,6 +1,7 @@
 import {atomWithImmer, useImmerAtom} from "jotai-immer";
-import {createStore} from 'jotai';
+import {Atom, createStore} from 'jotai';
 import {defaultSettings, getSettings, ISettingsOption, settingsStorage} from "@/shared/config.ts";
+import _ from "underscore";
 
 export interface IPanelStore {
     isOpen: boolean;
@@ -13,17 +14,40 @@ export const PanelStore = atomWithImmer<IPanelStore>({
 });
 export const usePanelStore = () => useImmerAtom(PanelStore);
 export const appStore = createStore();
-export const getPanelStore = () => appStore.get(PanelStore);
+
+/*暂时不需要在设置的Store的时候也把Storage同步了，需要手动同步一次*/
+function registerBrowserContextStore<T>(
+    store: ReturnType<typeof createStore>,
+    syncer: {
+        get(): PromiseLike<T>;
+        watch: Function;
+    },
+    initialValue: T
+) {
+    const _atom = atomWithImmer<T>(initialValue);
+    const getStore = () => store.get(_atom);
+    /*首次同步配置信息*/
+    setTimeout(async () => {
+        store.set(_atom, _.extend(initialValue, syncer.get()));
+    }, 50);
+    // 同步器发生变化
+    syncer.watch(async () => {
+        store.set(_atom, syncer.get);
+    });
+    return {
+        getStore,
+        atom: _atom,
+    };
+}
 
 /*FIXED: Sync LocalStorage*/
-export const settingStore = atomWithImmer<ISettingsOption>(defaultSettings);
+/*用于设置中的消息通信*/
+export const {
+    atom: settingStore,
+    getStore: getSettingStore
+} = registerBrowserContextStore<ISettingsOption>(appStore, {
+    get: getSettings,
+    watch: settingsStorage.watch
+}, defaultSettings);
 export const useSettingStore = () => useImmerAtom(settingStore);
-export const getSettingStore = () => appStore.get(settingStore);
-/*同步配置信息*/
-setTimeout(async () => {
-    appStore.set(settingStore, await getSettings());
-}, 50);
-settingsStorage.watch(async () => {
-    appStore.set(settingStore, (await getSettings()) as ISettingsOption);
-});
 

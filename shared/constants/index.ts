@@ -9,3 +9,4 @@ export const popupCardOffset = 7;
 export const portName = "openai-translator";
 export const injectedShadowName = "openai-translator";
 export const extName = "openai-translator";
+export const HistoryItemDragType = "history-item"
