@@ -181,27 +181,26 @@ interface IWordInfo {
 
 function Origin({className, ...props}: IOriginProps) {
     const {data} = useSWR(() => '/segment?selection=' + selection, async () => {
-//        console.log(await db.system.get("version"));
-//        await db.system.add({
-//            "version": 1,
-//        });
-//        console.log(await db.system.count());
-
         const data = await segment(selection)!;
         return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
     });
 
+    const searchWords = useMemo(() => {
+        return data?.map(word => word.segment) ?? [];
+    }, [data]);
+    const textToHighlight = useMemo(() => selection, [selection]);
     return <div
         {...props}
-        className={cx(className, "border-box ")}
+        className={cx(className, "border-box p-4px border-solid border-1px border-gray max-w-50vw rounded-6px")}
     >
         <Highlighter
-            highlightClassName={cx("cursor-pointer hover:bg-yellow rounded-lg bg-transparent px-2px")}
-            searchWords={data?.map(word => word.segment) ?? []}
-            autoEscape={true}
-            textToHighlight={selection}
-            highlightTag={({children, highlightIndex, className, ...props}) =>
-                <HighlighterMarker {...{highlightIndex, className, ...props}}>{children}</HighlighterMarker>
+            highlightClassName={cx("cursor-pointer hover:bg-yellow rounded-lg bg-transparent px-2px text-sm")}
+            searchWords={searchWords}
+            textToHighlight={textToHighlight}
+            highlightTag={({children, highlightIndex, className, ...props}) => {
+                console.log(children, searchWords);
+                return <HighlighterMarker {...{highlightIndex, className, ...props}}>{children}</HighlighterMarker>;
+            }
             }
         />
     </div>;
@@ -383,7 +382,7 @@ function ContentApp() {
 
                 minHeight: (panel.isOpen ? popupCardMinWidth : 0) + "px",
                 minWidth: popupCardMinWidth + "px",
-                maxWidth: popupCardMaxWidth + "px",
+                maxWidth: '50vw',
                 zIndex: 1,
             });
         };

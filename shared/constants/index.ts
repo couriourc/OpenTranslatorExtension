@@ -1,5 +1,5 @@
 export const zIndex = '2147483647';
-export const popupCardMinWidth = 380;
+export const popupCardMinWidth = 500 * window.devicePixelRatio;
 export const popupCardMinHeight = 220;
 export const popupCardMinHeightAfterTranslation = 500;
 export const popupCardMaxWidth = 660;
