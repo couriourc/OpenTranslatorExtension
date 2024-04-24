@@ -20,7 +20,6 @@ import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {
     injectedShadowName,
-    popupCardMaxWidth,
     popupCardMinWidth,
     popupCardOffset,
     portName,
@@ -51,7 +50,6 @@ import Highlighter from "react-highlight-words";
 import {segment} from "@/shared/lang/segment.ts";
 import useSWR from "swr";
 import {SiTrueup} from "react-icons/si";
-import {notify} from "@/shared/notifications";
 
 let $ui: JQuery;
 let selection: string;
@@ -111,7 +109,6 @@ function HighlighterMarker({
         ]);
 
     function handleOneWordPick(key: keyof IWordInfo) {
-        notify();
         setCurSelected((state) => {
             return {
                 ...state,

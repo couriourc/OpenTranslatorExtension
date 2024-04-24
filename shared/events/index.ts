@@ -72,6 +72,7 @@ export const make_chanel_message = (type: TAllCommandType) => (...args: any[]) =
     ...args
 }) as IAllCHANELEventMessage<TAllCommandType>);
 
+
 export function trigger_channel_event(event_name: TAllCommandType, args?: any) {
     MessagePool.then((connector) => {
         console.log(connector);

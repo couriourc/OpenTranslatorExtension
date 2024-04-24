@@ -1,7 +1,7 @@
 import {atomWithImmer, useImmerAtom} from "jotai-immer";
-import {Atom, createStore} from 'jotai';
+import {createStore} from 'jotai';
 import {defaultSettings, getSettings, ISettingsOption, settingsStorage} from "@/shared/config.ts";
-import _ from "underscore";
+import _, {noop} from "underscore";
 
 export interface IPanelStore {
     isOpen: boolean;
@@ -51,3 +51,12 @@ export const {
 }, defaultSettings);
 export const useSettingStore = () => useImmerAtom(settingStore);
 
+/*从数据库中获取东西*/
+registerBrowserContextStore(appStore, {
+    async get() {
+
+    },
+    watch: noop,
+},{
+
+});

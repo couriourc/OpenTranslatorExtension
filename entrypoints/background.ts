@@ -102,5 +102,6 @@ export default defineBackground(async () => {
     });
     // 将数据先集中处理，后续可以分布式
 
+    db.use_background();
     listen_all_background_command();
 });
