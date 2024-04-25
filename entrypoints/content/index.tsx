@@ -50,6 +50,7 @@ import Highlighter from "react-highlight-words";
 import {segment} from "@/shared/lang/segment.ts";
 import useSWR from "swr";
 import {SiTrueup} from "react-icons/si";
+import {useClickOutside} from '@mantine/hooks';
 
 let $ui: JQuery;
 let selection: string;
@@ -89,6 +90,7 @@ function HighlighterMarker({
     highlightIndex: number,
     className: string,
 }) {
+    const [opened, openMenu] = useState<boolean>(false);
     const words: Map<string, IWordInfo> = new Map();
     const [curSelected, setCurSelected] = useState<IWordInfo>({
         isKeyword: false,
@@ -127,11 +129,18 @@ function HighlighterMarker({
         enterEditing(false);
     }
 
+    const handleClickOutside = () => {
+        openMenu(false);
+    };
+    const ref = useClickOutside(handleClickOutside);
+
     return <Menu withinPortal={false}
                  closeOnClickOutside={true}
+                 clickOutsideEvents={["click"]}
                  closeOnItemClick={false}
                  shadow="md"
                  width={200}
+                 opened={opened}
     >
         <Menu.Target>
             <Mark
@@ -139,13 +148,17 @@ function HighlighterMarker({
                 spellCheck={false}
                 onDoubleClick={handleEnterEditorMode}
                 onBlurCapture={handleLeveEditorMode}
+                onClick={() => openMenu(true)}
                 className={cx("cursor-pointer", className)}
                 onKeyDownCapture={handleInput}
                 dangerouslySetInnerHTML={{__html: children as string}}
             />
         </Menu.Target>
 
-        <Menu.Dropdown>
+        <Menu.Dropdown
+            ref={ref}
+
+        >
             {/**@todo 优化点击后自动关闭的 BUG*/}
             <Menu.Item rightSection={
                 <SiTrueup className={cx({
@@ -195,10 +208,8 @@ function Origin({className, ...props}: IOriginProps) {
             searchWords={searchWords}
             textToHighlight={textToHighlight}
             highlightTag={({children, highlightIndex, className, ...props}) => {
-                console.log(children, searchWords);
                 return <HighlighterMarker {...{highlightIndex, className, ...props}}>{children}</HighlighterMarker>;
-            }
-            }
+            }}
         />
     </div>;
 }
