@@ -22,5 +22,8 @@
   },
   "SelectYourFavoriteTheme" : {
     "message": "选择最爱的主题"
+  },
+  "notify_copy_fail": {
+    "message": "Copy Failed😢"
   }
 }

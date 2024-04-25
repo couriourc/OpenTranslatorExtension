@@ -4,8 +4,6 @@ import {
     IAllCHANELEventMessage,
     listen_all_background_command,
     make_chanel_message,
-    TAllCommandType,
-    TBackgroundCommands
 } from "@/shared/events";
 import {GPTEngine, MessagePool} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
@@ -14,6 +12,7 @@ import {$t} from "@/shared/utils.ts";
 import {db} from "@/shared/store/db.ts";
 import {IMessageChannel, useBackgroundServiceConnector} from "@/shared/hooks/useConnector.ts";
 import {AbstractOpenAI} from "@/shared/engines/ABCOpenAiEngine.ts";
+import {TAllCommandType, TBackgroundCommands} from "@/shared/enums";
 
 type Port = ReturnType<typeof browser.runtime.connect>
 
@@ -115,7 +114,7 @@ async function handlePortName(channel: IMessageChannel) {
             self_command
         )
     );
-    channel.on_message(async (message: IAllCHANELEventMessage<TBackgroundCommands>, ) => {
+    channel.on_message(async (message: IAllCHANELEventMessage<TBackgroundCommands>) => {
         if (commands.has(message.type)) {
             return executeCommand(message.type as TAllCommandType);
         }

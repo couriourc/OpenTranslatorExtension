@@ -3,15 +3,17 @@ import {HiDotsHorizontal} from "react-icons/hi";
 import useSWR from "swr";
 import React, {PropsWithChildren, ReactElement, useEffect} from "react";
 import {useDrag, useDrop} from "react-dnd";
-import {Button, Card, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Tab, Tabs} from "@nextui-org/react";
+import {Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger, Tab, Tabs} from "@nextui-org/react";
 import {CopyIcon} from "@nextui-org/shared-icons";
 import {useCopyToClipboard} from "react-use";
 import '@mantine/notifications/styles.css';
 import {notifications} from "@mantine/notifications";
 import {HistoryItemDragType} from "@/shared/constants";
-import {z} from "zod";
 import {useBrowserConnector} from "@/shared/hooks/useConnector.ts";
-
+import {TWordActions, Z_WordActions} from "@/entrypoints/sidepanel/types.ts";
+import {LoadingCoffee} from "@/shared/components/Animation.tsx";
+import {notify_copy_fail, notify_copy_success, notify_delete_word_success} from "@/shared/notifications";
+import _ from "underscore";
 
 interface ExtendedAccordionControlProps extends AccordionControlProps {
     Actions?: ReactElement | ReactElement[];
@@ -33,23 +35,16 @@ function useCopy(): ReturnType<typeof useCopyToClipboard> {
     useEffect(() => {
         if (!binding.value) return;
         if (binding.error) {
-            notifications.show({
-                title: '复制失败🤥',
-                message: <>{binding.error}</>,
-            });
+            notify_copy_fail();
         } else {
-            notifications.show({
-                title: '复制成功💕',
-                message: "Cool😘",
-            });
+            notify_copy_success();
         }
     }, [binding]);
-
     return [binding, copy];
 }
 
 function TranslateResult({children}: PropsWithChildren) {
-    const [binding, copy] = useCopy();
+    const [_, copy] = useCopy();
 
     return <Box
         className={" px-12px text-justify text-sm text-#333 dark:text-#FFF cursor-pointer break-words max-w-97vw"}
@@ -59,23 +54,13 @@ function TranslateResult({children}: PropsWithChildren) {
     >{children}</Box>;
 }
 
+const db = useBrowserConnector("db");
 
 function HistoryItem({children, value, ...props}: PropsWithChildren<{
     value: string;
     height?: number;
-    [k: string]: any;
+    [_: string]: any;
 }>) {
-    useBrowserConnector("db")
-        .then((instance) => {
-            instance.send_message("asd").then((...receive) => {
-                console.log(`receive-->${receive}`, receive);
-
-            });
-            instance.on_message((info: any) => {
-                console.log(info);
-
-            });
-        });
     const [connected, source, dragPreview] = useDrag({
         type: HistoryItemDragType,
         collect(monitor) {
@@ -84,17 +69,16 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
             };
         }
     },);
-    const [binding, copy] = useCopy();
-    const zodWordActions = z.enum(["delete", "copy"]);
+    const [_binding, copy] = useCopy();
     const wordActions: (
         {
-            action: typeof zodWordActions,
+            action: TWordActions,
             description: string,
             props: Record<string, any>
         }
         )[] = [
         {
-            action: "delete",
+            action: Z_WordActions.Enum.delete,
             description: "移除",
             props: {
                 className: "text-danger",
@@ -104,16 +88,11 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
     ];
 
     function handleDeleteWord() {
-        notifications.show({
-            title: "删除成功👍",
-        });
+        notify_delete_word_success();
     }
 
-    function handleWordAction(action: typeof zodWordActions) {
-        console.log(zodWordActions.parse(action));
-        if (!zodWordActions.parse(action)) {
-            return false;
-        }
+    function handleWordAction(action: TWordActions) {
+        action = Z_WordActions.parse(action);
         switch (action) {
             case "delete":
                 handleDeleteWord();
@@ -132,9 +111,8 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
         >
             <AccordionControl
                 Actions={<>
-                    <Button onClick={() => {
-                        copy(value);
-                    }} isIconOnly color="default" variant={"light"} aria-label="More">
+                    <Button onClick={copy.bind(null, value)} isIconOnly color="default" variant={"light"}
+                            aria-label="More">
                         <CopyIcon></CopyIcon>
                     </Button>
                     <Dropdown>
@@ -145,20 +123,21 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
                         </DropdownTrigger>
                         <DropdownMenu
                             aria-label="Action event example"
-                            onAction={(key) => {
-                                handleWordAction(key);
+                            onAction={(key: any) => {
+                                handleWordAction(key as TWordActions);
                             }}
                         >
                             {
-                                wordActions.map(({action, description, props}) => {
-                                    return <DropdownItem
-                                        key={action}
-                                        title={description}
-                                        {...props}
-                                    >
-                                        {description}
-                                    </DropdownItem>;
-                                })
+                                _.map(wordActions,
+                                    ({action, description, props}) => {
+                                        return <DropdownItem
+                                            key={action}
+                                            title={description}
+                                            {...props}
+                                        >
+                                            {description}
+                                        </DropdownItem>;
+                                    })
                             }
                         </DropdownMenu>
                     </Dropdown>
@@ -180,12 +159,13 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
 
 
 export function HistoryList() {
-    const {data} = useSWR(() => "a", () => {
-        return Promise.resolve(["asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时",
-            "asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时asdjasdjaskldnaskldajskdljasd按时间第哦啊是对焦速度加啊四哦大家按时",
-        ]);
-    });
+    const {data: port, isLoading} = useSWR("db", async () => db);
 
+    const {data} = useSWR(() => "a", async () => [
+        "测试"
+    ]);
+
+    if (isLoading) return <LoadingCoffee></LoadingCoffee>;
     return <>
         <Accordion chevronPosition="left" w={"full"}
                    className={'box-border'}
@@ -204,7 +184,7 @@ export function HistoryList() {
 }
 
 export default function App() {
-    const [collectedProps, drop] = useDrop(() => ({
+    const [_collectedProps, drop] = useDrop(() => ({
         accept: HistoryItemDragType
     }));
 
@@ -231,7 +211,7 @@ export default function App() {
     </AppShell>;
 }
 
-function PageView({key, title, children}: PropsWithChildren) {
+function PageView({children}: PropsWithChildren) {
     return <>
         {children}
     </>;

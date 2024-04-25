@@ -48,3 +48,7 @@ export interface ISettings {
         noProxy?: string
     };
 }
+
+export interface IWrapJqueryEventObj {
+    unlisten(): any;
+}

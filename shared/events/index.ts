@@ -1,6 +1,8 @@
 import {MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 import {browser} from "wxt/browser";
 import {z} from "zod";
+import {TAllCommandType, TBackgroundCommands, TContentScriptCommand} from "@/shared/enums";
+import {IWrapJqueryEventObj} from "@/shared/types.ts";
 
 export const ALL_DOM_EVENTS = {
     "show-popup": (...args: any[]) => new CustomEvent("show-popup", ...args),
@@ -8,9 +10,6 @@ export const ALL_DOM_EVENTS = {
 };
 
 
-export interface IWrapJqueryEventObj {
-    unlisten(): any;
-}
 
 export function wrap_jquery_event(event_name: keyof typeof ALL_DOM_EVENTS, fn: Function) {
     let is_unlistened = false;
@@ -45,20 +44,6 @@ export function trigger_wrapper_jquery_event(event_name: keyof typeof ALL_DOM_EV
         });
 }
 
-/*在 background 中能执行的命令*/
-const TBackgroundCommands = z.enum(["open-option", 'abort', "openai"] as const);
-export type TBackgroundCommands = z.infer<typeof TBackgroundCommands>;
-/*在 content scripts 中能执行的命令*/
-const TContentScriptCommand = z.enum(["open-sidebar", "open-popup"] as const);
-export type TContentScriptCommand = z.infer<typeof TContentScriptCommand>;
-/*整个系统通用的指令*/
-export type TSysCommand = 'abort';
-export type TAllCommandType = "open-option"
-    | "open-setting"
-    | "open-translator"
-    | TBackgroundCommands
-    | TContentScriptCommand
-    | TSysCommand;
 
 export interface IAllCHANELEventMessage<CommandType extends TAllCommandType> {
     type: CommandType;
@@ -118,9 +103,7 @@ export function listen_all_content_scripts_command() {
 
 export function listen_all_background_command() {
     browser.runtime.onMessage.addListener(async (command: IAllCHANELEventMessage<TBackgroundCommands>, sender,) => {
-        console.log(sender);
         if (TBackgroundCommands.parse(command.type))
             await executeBackgroundCommand(command.type);
     });
-
 }
