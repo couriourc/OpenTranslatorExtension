@@ -20,10 +20,19 @@
   "EmptyTranslationMessage": {
     "message": "Life is like an npm install – So take a coffee"
   },
-  "SelectYourFavoriteTheme" : {
+  "SelectYourFavoriteTheme": {
     "message": "选择最爱的主题"
   },
   "notify_copy_fail": {
     "message": "Copy Failed😢"
+  },
+  "notify_unlocked": {
+    "message": "火力开发中🥶"
+  },
+  "notify_delete_word_success": {
+    "message": "删除成功"
+  },
+  "notify_copy_success": {
+    "message": "复制成功🎶"
   }
 }

@@ -31,7 +31,7 @@ export function TranslatorAppWrapper({children, wrapper = document.body}: {
 
                         <Portal target={wrapper}>
                             <div className={cx("pointer-events-auto ")}>
-                                <Notifications />
+                                <Notifications position="top-right" />
                             </div>
                         </Portal>
                     </NextThemesProvider>

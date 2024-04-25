@@ -37,7 +37,7 @@ export default defineConfig({
             Unocss({}),
             replace([
                 {
-                    filter: /\.html$/,
+                    filter: /index\.html$/,
                     replace: [
                         {
                             from: /<%\s*VITE_APP_TITLE\s*\/>/,

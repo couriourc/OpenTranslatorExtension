@@ -31,6 +31,7 @@
   "dependencies": {
     "@emotion/css": "^11.11.2",
     "@lottiefiles/react-lottie-player": "^3.5.3",
+    "@mantine/carousel": "^7.8.1",
     "@mantine/core": "^7.8.1",
     "@mantine/hooks": "^7.8.1",
     "@mantine/notifications": "^7.8.1",
@@ -43,6 +44,7 @@
     "@nextui-org/dropdown": "^2.1.18",
     "@nextui-org/image": "^2.0.27",
     "@nextui-org/input": "^2.1.18",
+    "@nextui-org/popover": "^2.1.21",
     "@nextui-org/radio": "^2.0.28",
     "@nextui-org/react": "^2.3.0",
     "@nextui-org/scroll-shadow": "^2.1.15",
@@ -59,6 +61,7 @@
     "common-tags": "^1.8.2",
     "dexie": "^4.0.4",
     "dexie-react-hooks": "^1.1.7",
+    "embla-carousel-react": "^7.1.0",
     "esbuild": "^0.20.2",
     "eventsource-parser": "^1.1.2",
     "framer-motion": "^11.1.1",
