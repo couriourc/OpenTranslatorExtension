@@ -52,11 +52,11 @@ export const {
 export const useSettingStore = () => useImmerAtom(settingStore);
 
 /*从数据库中获取东西*/
-registerBrowserContextStore(appStore, {
-    async get() {
-
-    },
-    watch: noop,
-},{
-
-});
+//registerBrowserContextStore(appStore, {
+//    async get() {
+//
+//    },
+//    watch: noop,
+//},{
+//
+//});

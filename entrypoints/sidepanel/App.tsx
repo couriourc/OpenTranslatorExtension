@@ -10,6 +10,7 @@ import '@mantine/notifications/styles.css';
 import {notifications} from "@mantine/notifications";
 import {HistoryItemDragType} from "@/shared/constants";
 import {z} from "zod";
+import {useBrowserConnector} from "@/shared/hooks/useConnector.ts";
 
 
 interface ExtendedAccordionControlProps extends AccordionControlProps {
@@ -64,7 +65,17 @@ function HistoryItem({children, value, ...props}: PropsWithChildren<{
     height?: number;
     [k: string]: any;
 }>) {
+    useBrowserConnector("db")
+        .then((instance) => {
+            instance.send_message("asd").then((...receive) => {
+                console.log(`receive-->${receive}`, receive);
 
+            });
+            instance.on_message((info: any) => {
+                console.log(info);
+
+            });
+        });
     const [connected, source, dragPreview] = useDrag({
         type: HistoryItemDragType,
         collect(monitor) {

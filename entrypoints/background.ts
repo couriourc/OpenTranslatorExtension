@@ -12,6 +12,8 @@ import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
 import {$t} from "@/shared/utils.ts";
 import {db} from "@/shared/store/db.ts";
+import {IMessageChannel, useBackgroundServiceConnector} from "@/shared/hooks/useConnector.ts";
+import {AbstractOpenAI} from "@/shared/engines/ABCOpenAiEngine.ts";
 
 type Port = ReturnType<typeof browser.runtime.connect>
 
@@ -59,40 +61,11 @@ export default defineBackground(async () => {
         await executeCommand(command as TAllCommandType);
     });
 
-    if (GPTEngine.is_loaded()) return;
-    const openai = new OpenAIEngine();
-    GPTEngine.set(openai);
-    const sys_commands = await browser.commands.getAll();
-    let commands = new Set<string>(
-        (sys_commands
-            ?.filter(command => !!command.name)
-            ?.map((item) => {
-                return item.name as string;
-            }) ?? []).concat(
-            /*用于自定义命令*/
-            "open-setting",
-            "open-sidebar"
-        )
-    );
     browser.runtime.onConnect.addListener((connector,) => {
         if (connector.name !== portName) return;
-        const controller = new AbortController();
         console.assert(connector.name === portName);
         MessagePool.set(connector);
 
-        connector.onMessage.addListener(async (message: IAllCHANELEventMessage<TBackgroundCommands>, port) => {
-            if (commands.has(message.type)) {
-                return executeCommand(message.type as TAllCommandType);
-            }
-            switch (message.type) {
-                case 'abort':
-                    controller.abort();
-                    break;
-                case 'openai':
-                    await sendOpenAiWithStream(port, message, controller.signal);
-                    break;
-            }
-        });
     });
 
     browser.runtime.onInstalled.addListener(({reason}) => {
@@ -100,8 +73,63 @@ export default defineBackground(async () => {
             storage.setItem("local:installData", Date.now());
         }
     });
+    // 替换使用 openai
+    replaceGPTEngine(new OpenAIEngine());
     // 将数据先集中处理，后续可以分布式
+    useBackgroundServiceConnector("db").then(handleDBQuery);
+    useBackgroundServiceConnector("openai").then(handleOpenAiQuery);
+    useBackgroundServiceConnector(portName).then(handlePortName);
 
-    db.use_background();
+
     listen_all_background_command();
 });
+
+function handleDBQuery(channel: IMessageChannel) {
+//    port.onMessage.addListener((message) => {
+//        switch (message) {
+//
+//        }
+//    });
+    channel.on_message((...args: any[]) => {
+        console.log(...args);
+    });
+}
+
+function handleOpenAiQuery(channel: IMessageChannel) {
+    channel.on_message((...args: any[]) => {
+        console.log(...args);
+    });
+}
+
+async function handlePortName(channel: IMessageChannel) {
+    const sys_commands = await browser.commands.getAll();
+    const self_command = ["open-setting", "open-sidebar"];/*用于自定义命令*/
+    const controller = new AbortController();
+
+    let commands = new Set<string>(
+        (sys_commands
+            ?.filter(command => !!command.name)
+            ?.map((item) => {
+                return item.name as string;
+            }) ?? []).concat(
+            self_command
+        )
+    );
+    channel.on_message(async (message: IAllCHANELEventMessage<TBackgroundCommands>, ) => {
+        if (commands.has(message.type)) {
+            return executeCommand(message.type as TAllCommandType);
+        }
+        switch (message.type) {
+            case 'abort':
+                controller.abort();
+                break;
+            case 'openai':
+//                await sendOpenAiWithStream(message, controller.signal);
+                break;
+        }
+    });
+}
+
+function replaceGPTEngine(engine: AbstractOpenAI) {
+    GPTEngine.replace(engine);
+}

@@ -5,11 +5,10 @@ import {TranslatorAppWrapper} from "@/shared/components/App.tsx";
 import "uno.css";
 import {DndProvider} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {db} from "@/shared/store/db.ts";
 
-setTimeout(()=>{
-    db.use_bypass();
-})
+//setTimeout(()=>{
+////    db.use_bypass();
+//})
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <TranslatorAppWrapper>
         <DndProvider backend={HTML5Backend}>
