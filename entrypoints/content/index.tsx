@@ -10,12 +10,14 @@ import {
     CardBody,
     CardFooter,
     CardHeader,
-    Divider,
     ScrollShadow,
     Select,
     SelectItem,
 } from "@nextui-org/react";
-import {Mark, Menu,} from "@mantine/core";
+import {
+    Mark, Menu,
+    Divider,
+} from "@mantine/core";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
 import {
@@ -27,7 +29,7 @@ import {
 } from "@/shared/constants";
 import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
-import {IoClose} from "react-icons/io5";
+import {IoCaretDown, IoClose} from "react-icons/io5";
 import {usePanelStore} from "@/shared/store";
 import {GPTEngine, MessagePool, WrapperHelper} from "@/shared/design-pattern/Singleton.ts";
 import {$t, getCaretNodeType, getClientX, getClientY, selectCursorWord, UserEventType} from "@/shared/utils.ts";
@@ -67,8 +69,8 @@ function Preview() {
     return <>
         {
             /**@todo: 处理预览部分的信息*/
-            Assert(!!!message,
-                <Markdown>{message}</Markdown>,
+            Assert(!message,
+                <Markdown>asdjasd啊是第几啊是大设计大赛建瓯大宋i的骄傲</Markdown>,
                 <LoadingCoffee/>
             )
         }
@@ -258,6 +260,13 @@ function EnginePanel({selection}: { selection: string }) {
                 <CardBody>
                     <ScrollShadow hideScrollBar className="min-h-200px overflow-visible max-h-40vh">
                         <Origin className={cx("h-full")}></Origin>
+                        <Divider className={cx("my-12px")}
+                                 variant="dashed"
+                                 label={<div className={"flex flex-nowrap items-center"}>
+                                     翻译结果<IoCaretDown/>
+                                 </div>}
+                                 labelPosition="center"
+                        />
                         <Preview></Preview>
                     </ScrollShadow>
                     <div className={"flex items-center"}>
