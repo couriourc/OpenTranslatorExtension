@@ -1,32 +1,14 @@
-import React, {ReactNode, useEffect, useMemo, useRef, useState} from 'react';
+import React, {KeyboardEventHandler, PropsWithChildren, ReactNode, useEffect, useMemo, useRef, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import {cx} from "@emotion/css";
 import 'uno.css';
 import "@/assets/styles/style.less";
 import {useDragControls} from "framer-motion";
-import {
-    Avatar,
-    Card,
-    CardBody,
-    CardFooter,
-    CardHeader,
-    ScrollShadow,
-    Select,
-    SelectItem,
-} from "@nextui-org/react";
-import {
-    Mark, Menu,
-    Divider,
-} from "@mantine/core";
+import {Avatar, Card, CardBody, CardFooter, CardHeader, ScrollShadow, Select, SelectItem,} from "@nextui-org/react";
+import {Divider, Mark, Menu, UnstyledButton} from "@mantine/core";
 import {IoIosHeartEmpty, IoMdCopy} from "react-icons/io";
 import {Logo, LogoWithName} from "@/shared/components/Logo.tsx";
-import {
-    injectedShadowName,
-    popupCardMinWidth,
-    popupCardOffset,
-    portName,
-    zIndex
-} from "@/shared/constants";
+import {injectedShadowName, popupCardMinWidth, popupCardOffset, portName, zIndex} from "@/shared/constants";
 import {DndProvider, useDrag} from "react-dnd";
 import {HTML5Backend} from "react-dnd-html5-backend";
 import {IoCaretDown, IoClose} from "react-icons/io5";
@@ -48,11 +30,11 @@ import {getSettings} from "@/shared/config.ts";
 import {CiSettings} from "react-icons/ci";
 import {Markdown} from "@/shared/components/Markdown.tsx";
 import {LoadingCoffee} from "@/shared/components/Animation.tsx";
-import Highlighter from "react-highlight-words";
-import {segment} from "@/shared/lang/segment.ts";
-import useSWR from "swr";
 import {SiTrueup} from "react-icons/si";
 import {useClickOutside} from '@mantine/hooks';
+import _ from "underscore"
+import {useTransformStore, ZodTranslatorStore} from "@/shared/store/content.atom.ts";
+
 
 let $ui: JQuery;
 let selection: string;
@@ -69,8 +51,8 @@ function Preview() {
     return <>
         {
             /**@todo: 处理预览部分的信息*/
-            Assert(!message,
-                <Markdown>asdjasd啊是第几啊是大设计大赛建瓯大宋i的骄傲</Markdown>,
+            Assert(!!message,
+                <Markdown>{message}</Markdown>,
                 <LoadingCoffee/>
             )
         }
@@ -192,28 +174,73 @@ interface IWordInfo {
 }
 
 function Origin({className, ...props}: IOriginProps) {
-    const {data} = useSWR(() => '/segment?selection=' + selection, async () => {
-        const data = await segment(selection)!;
-        return [...data]?.filter((seg) => !/\s/.test(seg.segment)).filter((word) => word.isWordLike);
-    });
+    const textToHighlight = useMemo(() => _.escape(selection), [selection]);
+    const {state, update} = useTransformStore();
+    const handleKeyUpCapture: KeyboardEventHandler<HTMLDivElement> = (e) => {
+        selection = div.current!.innerText;
+        e.stopPropagation();
+    }
 
-    const searchWords = useMemo(() => {
-        return data?.map(word => word.segment) ?? [];
-    }, [data]);
-    const textToHighlight = useMemo(() => selection, [selection]);
+    const handleKeyDownCapture: KeyboardEventHandler<HTMLDivElement> = (e) => {
+        e.stopPropagation();
+        update(ZodTranslatorStore.Enum.editing);
+
+    }
+
+    function handlePaste(e: any) {
+
+    }
+
+    const div = useRef<HTMLDivElement | undefined>();
+
+    function handleChange(e: any) {
+        console.log(e)
+
+    }
+
+    function handleAdjustText() {
+        div.current!.innerHTML = _.escape(selection);
+        // 进入文本翻译中
+        update(ZodTranslatorStore.Enum.ing);
+
+    }
+
+    function handleFocus() {
+        // 进入预编辑状态
+        update(ZodTranslatorStore.Enum.pre);
+    }
+
     return <div
         {...props}
         className={cx(className, "border-box p-4px border-solid border-1px border-gray max-w-50vw rounded-6px")}
     >
-        <Highlighter
-            highlightClassName={cx("cursor-pointer hover:bg-yellow rounded-lg bg-transparent px-2px text-sm")}
-            searchWords={searchWords}
-            textToHighlight={textToHighlight}
-            highlightTag={({children, highlightIndex, className, ...props}) => {
-                return <HighlighterMarker {...{highlightIndex, className, ...props}}>{children}</HighlighterMarker>;
-            }}
-        />
+
+        <div className={"max-h-100px outline-none! overflow-y-auto overflow-x-hidden"} contentEditable={true}
+             ref={(ref) => div.current = ref as HTMLDivElement}
+             onKeyUpCapture={handleKeyUpCapture}
+             onKeyDownCapture={handleKeyDownCapture}
+             onPaste={handlePaste}
+             onChange={handleChange}
+             onFocus={handleFocus}
+             dangerouslySetInnerHTML={{__html: textToHighlight}}
+             onBlurCapture={handleAdjustText}
+        ></div>
     </div>;
+}
+
+
+function Transformer({...props}: PropsWithChildren) {
+    const {displayName} = useTransformStore();
+    return <Divider className={cx("my-12px")}
+                    variant="dashed"
+                    label={
+                        <UnstyledButton className={"flex flex-nowrap items-center"}>
+                            {displayName}
+                            <IoCaretDown/>
+                        </UnstyledButton>
+                    }
+                    labelPosition="center"
+    />
 }
 
 function EnginePanel({selection}: { selection: string }) {
@@ -258,15 +285,9 @@ function EnginePanel({selection}: { selection: string }) {
 
                 <Divider></Divider>
                 <CardBody>
-                    <ScrollShadow hideScrollBar className="min-h-200px overflow-visible max-h-40vh">
+                    <ScrollShadow hideScrollBar className="min-h-200px overflow-visible max-h-800px">
                         <Origin className={cx("h-full")}></Origin>
-                        <Divider className={cx("my-12px")}
-                                 variant="dashed"
-                                 label={<div className={"flex flex-nowrap items-center"}>
-                                     翻译结果<IoCaretDown/>
-                                 </div>}
-                                 labelPosition="center"
-                        />
+                        <Transformer/>
                         <Preview></Preview>
                     </ScrollShadow>
                     <div className={"flex items-center"}>
