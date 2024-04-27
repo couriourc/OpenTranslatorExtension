@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [0.3.0](https://github.com/couriourc/OpenTranslatorExtension/compare/v0.2.1...v0.3.0) (2024-04-27)
+
+
+### Features
+
+* **bus:** 优化通信方法 ([f2b9001](https://github.com/couriourc/OpenTranslatorExtension/commit/f2b9001024c187e165c179b950e210e7e0e4f021))
+* **Content:** 翻译界面基本部分 ([c3a2982](https://github.com/couriourc/OpenTranslatorExtension/commit/c3a2982b51169efafdde168877497c4db1e04db6))
+
 ### 0.2.1 (2024-04-27)
 
 
