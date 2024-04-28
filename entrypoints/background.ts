@@ -9,7 +9,6 @@ import {GPTEngine, MessagePool} from "@/shared/design-pattern/Singleton.ts";
 import {OpenAIEngine} from "@/shared/engines/openai.ts";
 import {portName} from "@/shared/constants";
 import {$t} from "@/shared/utils.ts";
-import {db} from "@/shared/store/db.ts";
 import {IMessageChannel, useBackgroundServiceConnector} from "@/shared/hooks/useConnector.ts";
 import {AbstractOpenAI} from "@/shared/engines/ABCOpenAiEngine.ts";
 import {TAllCommandType, TBackgroundCommands} from "@/shared/enums";
@@ -84,11 +83,6 @@ export default defineBackground(async () => {
 });
 
 function handleDBQuery(channel: IMessageChannel) {
-//    port.onMessage.addListener((message) => {
-//        switch (message) {
-//
-//        }
-//    });
     channel.on_message((...args: any[]) => {
         console.log(...args);
     });
