@@ -9,7 +9,7 @@ const settings = [
         Component: () =>
             <Radio.Group
                 name="favoriteFramework"
-                label="Select your favorite framework/library"
+                label="Select your favorite theme"
                 description="This is anonymous"
                 withAsterisk
             >
