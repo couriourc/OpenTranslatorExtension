@@ -29,6 +29,8 @@
     }
   },
   "dependencies": {
+    "@couriourc/design-patterns": "^1.0.0",
+    "@couriourc/hooks": "^1.0.0",
     "@emotion/css": "^11.11.2",
     "@lottiefiles/react-lottie-player": "^3.5.3",
     "@mantine/carousel": "^7.8.1",
